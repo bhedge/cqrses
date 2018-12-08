@@ -1,6 +1,6 @@
 {
   "name": "cqrses",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A project for CQRS and Event Sourcing in JavaScript",
   "main": "src/index.js",
   "scripts": {
