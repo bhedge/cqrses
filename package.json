@@ -2,9 +2,11 @@
   "name": "cqrses",
   "version": "1.0.1",
   "description": "A project for CQRS and Event Sourcing in JavaScript",
-  "main": "src/index.js",
+  "main": "./src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./src/index.js",
+    "test": "tap test/*.js --cov",
+    "test-report": "tap test/*.js --cov --coverage-report=lcov",
     "release": "standard-version"
   },
   "publishConfig": {
@@ -32,6 +34,13 @@
   },
   "homepage": "https://github.com/bhedge/cqrses#readme",
   "devDependencies": {
-    "standard-version": "^4.4.0"
+    "debug": "^4.1.0",
+    "standard-version": "^4.4.0",
+    "tap": "^12.1.1"
+  },
+  "dependencies": {
+    "amqp-mock": "^0.1.4-1",
+    "lowdb": "^1.0.0",
+    "pg": "^7.7.1"
   }
 }
