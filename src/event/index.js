@@ -14,10 +14,20 @@ module.exports = class Event {
     }
 
     async tryWrite(){
-        if(typeof this !== 'object') return Promise.reject( new Error('E_EVENT_NOT_OBJECT') );
         if(this === null) return Promise.reject( new Error('E_EVENT_IS_NULL') );
-        if(!this.id || this.id=='') return Promise.reject( new Error('E_EVENT_NO_ID') );
+        if(typeof this !== 'object') return Promise.reject( new Error('E_EVENT_NOT_OBJECT') );
 
+        // ** present check ** //
+        if(!("id" in this)) return Promise.reject( new Error('E_EVENT_ID_MISSING') );
+        if(!("version" in this)) return Promise.reject( new Error('E_EVENT_VERSION_MISSING') );
+
+        // ** typeof check ** //
+        if(typeof this.version !== 'number') return Promise.reject( new Error('E_EVENT_VERSION_NOT_NUM') );
+
+        // ** value check ** //
+        if(this.id=='') return Promise.reject( new Error('E_EVENT_ID_BLANK') );
+        if(this.version<0) return Promise.reject( new Error('E_EVENT_VERSION_BELOW_ZERO') );
+        
         return; 
     }
 
