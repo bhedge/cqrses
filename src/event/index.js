@@ -14,9 +14,6 @@ module.exports = class Event {
     }
 
     async tryWrite(){
-        if(this === null) return Promise.reject( new Error('E_EVENT_IS_NULL') );
-        if(typeof this !== 'object') return Promise.reject( new Error('E_EVENT_NOT_OBJECT') );
-
         // ** present check ** //
         if(!("id" in this)) return Promise.reject( new Error('E_EVENT_ID_MISSING') );
         if(!("version" in this)) return Promise.reject( new Error('E_EVENT_VERSION_MISSING') );
@@ -34,7 +31,7 @@ module.exports = class Event {
     async doWrite(persist,broker) {
         await this.tryWrite();
 
-        let status = {code:200};
+        let status = {status:200};
         debug('write function called.');
 
         return status;

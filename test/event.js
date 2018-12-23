@@ -9,11 +9,19 @@ let validEvent = {
 t.test('Event should return 200 on valid event', async function (t) {
     let event = new Event( validEvent );
     let result = await event.doWrite();
-    t.same(result, {code: 200}, 'should return code 200');
+    t.same(result, {status: 200}, 'should return status 200');
     t.end()
 })
 
 // ** present check ** //
+t.test('Event should throw error when no id present', async function (t) {
+    let testEvent = Object.assign({}, validEvent);
+    let event = new Event( testEvent );
+    delete event.id;
+    t.rejects( event.tryWrite() , {message:'E_EVENT_ID_MISSING'})
+    t.end()
+})
+
 t.test('Event should throw error when no id present', async function (t) {
     let testEvent = Object.assign({}, validEvent);
     let event = new Event( testEvent );
