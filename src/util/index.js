@@ -9,12 +9,26 @@ let util = {};
 util.data = {};
 util.data.check = {};
 
+/**
+ * Assign the args for the function
+ * @param {Object} args - The arguments for the function
+ * @param {string} args.field - The name of the field you are evaluating
+ * @param {boolean} args.logic - The logic statement passed in should evaluate to true or false
+ * @param {string} args.error - The error message to throw if logic evaluates to false
+ */
 util.data.check.present = async function(args) {
     await preReqCheck(args);
     if(!args.logic) return Promise.reject( new Error(args.error) );
     return {status: 200};
 };
 
+/**
+ * Assign the args for the function
+ * @param {Object} args - The arguments for the function
+ * @param {string} args.field - The name of the field you are evaluating
+ * @param {string} args.type - The typeof that the passed in field should be object, string, number or array
+ * @param {string} args.error - The error message to throw if logic evaluates to false
+ */
 util.data.check.typeof = async function(args) {
     await preReqCheck(args);
     if(!("type" in args)) return Promise.reject( new Error('E_UTIL_ARGS_TYPE_MISSING') );
@@ -23,6 +37,13 @@ util.data.check.typeof = async function(args) {
     return {status: 200};
 };
 
+/**
+ * Assign the args for the function
+ * @param {Object} args - The arguments for the function
+ * @param {string} args.field - The name of the field you are evaluating
+ * @param {boolean} args.logic - The logic statement passed in should evaluate to true or false
+ * @param {string} args.error - The error message to throw if logic evaluates to false
+ */
 util.data.check.value = async function(args) {
     await preReqCheck(args);
     if(!("logic" in args)) return Promise.reject( new Error('E_UTIL_ARGS_LOGIC_MISSING') );
@@ -33,11 +54,8 @@ util.data.check.value = async function(args) {
 async function preReqCheck(args){
     if(!args) return Promise.reject( new Error('E_UTIL_ARGS_IS_NULL') );
     if(typeof args !== 'object') return Promise.reject( new Error('E_UTIL_ARGS_NOT_OBJECT') );
-    if(!("name" in args)) return Promise.reject( new Error('E_UTIL_ARGS_NAME_MISSING') );
-    if(!("error" in args)) return Promise.reject( new Error('E_UTIL_ARGS_ERROR_MISSING') );
-    if(args.name === '') return Promise.reject( new Error('E_UTIL_ARGS_NAME_BLANK') );
     if(!("field" in args)) return Promise.reject( new Error('E_UTIL_ARGS_FIELD_MISSING') );
-
+    if(!("error" in args)) return Promise.reject( new Error('E_UTIL_ARGS_ERROR_MISSING') );
     return;
 }
 

@@ -2,7 +2,6 @@ var t = require('tap');
 const util = require('../src/util');
 
 const validArg = {
-    name: 'test_args',
     field: 'name',
     error: 'E_ERROR_MESSAGE',
     logic: true
@@ -17,7 +16,7 @@ const validObject = {
 
 t.test('util.data.check.present should return 200 on valid args', async function (t) {
     let testArg = Object.assign({}, validArg);
-    testArg.logic = ("name" in testArg);
+    testArg.logic = ("field" in testArg);
     let result = await util.data.check.present(testArg);
     t.same(result, {status: 200}, 'should return status 200');
     t.end()
@@ -67,13 +66,6 @@ t.test('util.data.check.present should throw error when no arg', async function 
 
 t.test('util.data.check.present should throw error when arg is null', async function (t) {
     t.rejects( util.data.check.present(null) , {message:'E_UTIL_ARGS_IS_NULL'})
-    t.end()
-})
-
-t.test('util.data.check.present should throw error when arg.name is missing', async function (t) {
-    let testArg = Object.assign({}, validArg);
-    delete testArg.name;
-    t.rejects( util.data.check.present(testArg) , {message:'E_UTIL_ARGS_NAME_MISSING'})
     t.end()
 })
 
@@ -129,14 +121,6 @@ t.test('util.data.check.typeof should throw error when type check for string eva
 // })
 
 // ** value check ** //
-t.test('util.data.check.present should throw error when name is blank', async function (t) {
-    let testArg = Object.assign({}, validArg);
-    testArg.name = '';
-
-    t.rejects( util.data.check.present(testArg) , {message:'E_UTIL_ARGS_NAME_BLANK'})
-    t.end()
-})
-
 t.test('util.data.check.present should throw error when logic evaluates to false', async function (t) {
     let testArg = Object.assign({}, validArg);
     testArg.logic = false;

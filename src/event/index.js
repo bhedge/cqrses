@@ -5,6 +5,7 @@ const debug = require('debug')('event');
 */
 debug('event loaded.');
 const eventBase = require('./base');
+const util = require('.././util');
 
 module.exports = class Event {  
     constructor(o) {
@@ -15,8 +16,8 @@ module.exports = class Event {
 
     async tryWrite(){
         // ** present check ** //
-        if(!("id" in this)) return Promise.reject( new Error('E_EVENT_ID_MISSING') );
-        if(!("version" in this)) return Promise.reject( new Error('E_EVENT_VERSION_MISSING') );
+        await util.data.check.present({field:'id', logic: ("id" in this), error:'E_EVENT_ID_MISSING'});
+        await util.data.check.present({field:'version', logic: ("version" in this), error:'E_EVENT_VERSION_MISSING'});
 
         // ** typeof check ** //
         if(typeof this.version !== 'number') return Promise.reject( new Error('E_EVENT_VERSION_NOT_NUM') );
