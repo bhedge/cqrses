@@ -47,7 +47,7 @@ util.data.check.typeof = async function(args) {
 util.data.check.value = async function(args) {
     await preReqCheck(args);
     if(!("logic" in args)) return Promise.reject( new Error('E_UTIL_ARGS_LOGIC_MISSING') );
-    if(!args.logic) return Promise.reject( new Error(args.error) );
+    if(args.logic) return Promise.reject( new Error(args.error) );
     return {status: 200};
 };
 

@@ -15,16 +15,19 @@ module.exports = class Event {
     }
 
     async tryWrite(){
+        let v = [];
         // ** present check ** //
-        await util.data.check.present({field:'id', logic: ("id" in this), error:'E_EVENT_ID_MISSING'});
-        await util.data.check.present({field:'version', logic: ("version" in this), error:'E_EVENT_VERSION_MISSING'});
+        v.push( util.data.check.present({field:'id', logic: ("id" in this), error:'E_EVENT_ID_MISSING'}) );
+        v.push( util.data.check.present({field:'version', logic: ("version" in this), error:'E_EVENT_VERSION_MISSING'}) );
 
         // ** typeof check ** //
-        if(typeof this.version !== 'number') return Promise.reject( new Error('E_EVENT_VERSION_NOT_NUM') );
+        v.push( util.data.check.typeof({field: this.version, type: 'number', error:'E_EVENT_VERSION_NOT_NUM'}) );
 
         // ** value check ** //
-        if(this.id=='') return Promise.reject( new Error('E_EVENT_ID_BLANK') );
-        if(this.version<0) return Promise.reject( new Error('E_EVENT_VERSION_BELOW_ZERO') );
+        v.push( util.data.check.value({field:'id', logic: (this.id==''), error:'E_EVENT_ID_BLANK'}) );
+        v.push( util.data.check.value({field:'id', logic: (this.version<0), error:'E_EVENT_VERSION_BELOW_ZERO'}) );
+
+        await Promise.all( v );
         
         return; 
     }

@@ -4,7 +4,7 @@ const util = require('../src/util');
 const validArg = {
     field: 'name',
     error: 'E_ERROR_MESSAGE',
-    logic: true
+    logic: false
 }
 
 const validObject = {
@@ -128,9 +128,9 @@ t.test('util.data.check.present should throw error when logic evaluates to false
     t.end()
 })
 
-t.test('util.data.check.value should throw error when logic evaluates to false', async function (t) {
+t.test('util.data.check.value should throw error when logic evaluates to true', async function (t) {
     let testArg = Object.assign({}, validArg);
-    testArg.logic = false;
+    testArg.logic = true;
     t.rejects( util.data.check.value(testArg) , {message: validArg.error })
     t.end()
 })
