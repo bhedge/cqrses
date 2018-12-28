@@ -51,6 +51,12 @@ util.data.check.value = async function(args) {
     return {status: 200};
 };
 
+/**
+ * Assign the args for the function
+ * @param {Object} args - The arguments for the function
+ * @param {string} args.field - The name of the field you are evaluating
+ * @param {string} args.error - The error message to throw if logic evaluates to false
+ */
 async function preReqCheck(args){
     if(!args) return Promise.reject( new Error('E_UTIL_ARGS_IS_NULL') );
     if(typeof args !== 'object') return Promise.reject( new Error('E_UTIL_ARGS_NOT_OBJECT') );
