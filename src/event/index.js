@@ -35,6 +35,8 @@ module.exports = class Event {
     async doWrite(persist,broker) {
         await this.tryWrite();
 
+        this.id = await util.flakeId();
+
         let status = {status:200};
         debug('write function called.');
 
