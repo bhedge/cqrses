@@ -56,8 +56,6 @@ t.test('util.data.check.value should return 200 on valid args', async function (
     t.end()
 })
 
-
-
 // ** present check ** //
 t.test('util.data.check.present should throw error when no arg', async function (t) {
     t.rejects( util.data.check.present() , {message:'E_UTIL_ARGS_IS_NULL'})
@@ -112,14 +110,6 @@ t.test('util.data.check.typeof should throw error when type check for string eva
     t.end()
 })
 
-// t.test('Event should throw error when id not a number', async function (t) {
-//     let testEvent = Object.assign({}, validEvent);
-//     testEvent.version = 'nope';
-//     let event = new Event( testEvent );
-//     t.rejects( event.tryWrite() , {message:'E_EVENT_VERSION_NOT_NUM'})
-//     t.end()
-// })
-
 // ** value check ** //
 t.test('util.data.check.present should throw error when logic evaluates to false', async function (t) {
     let testArg = Object.assign({}, validArg);
@@ -132,6 +122,11 @@ t.test('util.data.check.value should throw error when logic evaluates to true', 
     let testArg = Object.assign({}, validArg);
     testArg.logic = true;
     t.rejects( util.data.check.value(testArg) , {message: validArg.error })
+    t.end()
+})
+
+t.test('util.flakeId should generate a new id', async function (t) {
+    t.resolves( util.flakeId() )
     t.end()
 })
 

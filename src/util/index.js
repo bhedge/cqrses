@@ -5,6 +5,10 @@ const debug = require('debug')('util');
 */
 debug('util loaded.');
 
+const FlakeIdGen = require('flake-idgen');
+const intformat = require('biguint-format');
+const generator = new FlakeIdGen();
+
 let util = {};
 util.data = {};
 util.data.check = {};
@@ -63,6 +67,10 @@ async function preReqCheck(args){
     if(!("field" in args)) return Promise.reject( new Error('E_UTIL_ARGS_FIELD_MISSING') );
     if(!("error" in args)) return Promise.reject( new Error('E_UTIL_ARGS_ERROR_MISSING') );
     return;
+}
+
+util.flakeId = async function (){
+    return intformat(generator.next(), 'hex', { prefix: '0x' });
 }
 
 module.exports = util;
