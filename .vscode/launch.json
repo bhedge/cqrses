@@ -7,9 +7,14 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "env": {"DEBUG":"*"},
-            "program": "${workspaceFolder}/src/index.js"
+            "name": "Launch via NPM",
+            "runtimeExecutable": "npm",
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "run-script",
+                "debug"
+            ],
+            "port": 9229
         }
     ]
 }

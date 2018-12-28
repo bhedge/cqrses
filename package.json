@@ -7,7 +7,8 @@
     "start": "./src/index.js",
     "test": "tap test/*.js --cov",
     "test-report": "tap test/*.js --cov --coverage-report=lcov",
-    "release": "standard-version"
+    "release": "standard-version",
+    "debug":"cross-env NODE_ENV=development DEBUG='*' node ./src/index.js"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
@@ -34,6 +35,7 @@
   },
   "homepage": "https://github.com/bhedge/cqrses#readme",
   "devDependencies": {
+    "cross-env": "^5.2.0",
     "debug": "^4.1.0",
     "standard-version": "^4.4.0",
     "tap": "^12.1.1"
