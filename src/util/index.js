@@ -73,4 +73,8 @@ util.flakeId = async function (){
     return intformat(generator.next(), 'hex', { prefix: '0x' });
 }
 
+util.sleep = async function (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 module.exports = util;

@@ -130,5 +130,22 @@ t.test('util.flakeId should generate a new id', async function (t) {
     t.end()
 })
 
+t.test('util.sleep should resolve to a sleep promise', async function (t) {
+    t.resolves( util.sleep(20) )
+    t.end()
+})
+
+t.test('util.sleep should sleep the specified amount of time of 1000 ms', async function (t) {
+    const waitMilliSeconds = 1000;
+    const start = process.hrtime();
+    await util.sleep( waitMilliSeconds );
+    var elapsed = process.hrtime(start)[1] / 1000;
+
+    const isDelayed = (elapsed >= waitMilliSeconds);
+
+    t.equal(isDelayed, true, 'should be true to signify delay of at least amount' )
+    t.end()
+})
+
 
 
