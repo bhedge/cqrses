@@ -153,6 +153,22 @@ t.test('Db should return current state by aggregateId', async function (t) {
     t.end()
 })
 
+t.test('Db should throw error on write when the version is above the current state by 2 or more', async function (t) {
+    let event3 = Object.assign({}, event2);
+    event3.version = event3.version ++;
+    t.rejects( db.mutate.write('eventSource', event3) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.end()
+})
+
+t.test('Db should throw error on write when the version is below the current state by 1 or more', async function (t) {
+    let event3 = Object.assign({}, event2);
+    event3.version = event3.version --;
+    t.rejects( db.mutate.write('eventSource', event3) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.end()
+})
+
+
+
 
 
 
