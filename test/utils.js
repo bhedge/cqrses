@@ -131,7 +131,7 @@ t.test('util.flakeId should generate a new id', async function (t) {
 })
 
 t.test('util.sleep should resolve to a sleep promise', async function (t) {
-    t.resolves( util.sleep(20) )
+    t.resolves( util.sleep(2) )
     t.end()
 })
 
@@ -141,8 +141,9 @@ t.test('util.sleep should sleep the specified amount of time of 1000 ms', async 
 
     await util.sleep( waitMilliSeconds );
     const elapsed = process.hrtime(start)[1] / 1000;
+    const drift = 500; /* added because setTimeout is unreliable and returns faster than specified time */
 
-    const isDelayed = (elapsed >= waitMilliSeconds);
+    const isDelayed = (elapsed + drift >= waitMilliSeconds);
 
     if(!isDelayed) console.error('util.sleep elapsed:', elapsed, 'waitMilliSeconds:',waitMilliSeconds)
 

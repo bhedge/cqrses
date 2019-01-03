@@ -8,7 +8,6 @@ debug('util loaded.');
 const FlakeIdGen = require('flake-idgen');
 const intformat = require('biguint-format');
 const generator = new FlakeIdGen();
-const sleep = require('sleep-promise');
 
 let util = {};
 util.data = {};
@@ -74,10 +73,9 @@ util.flakeId = async function (){
     return intformat(generator.next(), 'hex', { prefix: '0x' });
 }
 
-util.sleep = async function (ms) {
-    const sleepPromise = sleep(ms);
-    await sleepPromise;
-    return;
+util.sleep = function (ms) {
+    console.log('****** MS ******', ms);
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 module.exports = util;
