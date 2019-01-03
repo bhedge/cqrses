@@ -74,7 +74,6 @@ util.flakeId = async function (){
 }
 
 util.sleep = function (ms) {
-    console.log('****** MS ******', ms);
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
