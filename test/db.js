@@ -73,6 +73,13 @@ t.test('Db should return count of 1', async function (t) {
     t.end()
 })
 
+t.test('Db should return current state by aggregateId', async function (t) {
+    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let compare = Object.assign({}, event0);
+    t.same(result, compare, 'return should match current state event0');
+    t.end()
+})
+
 t.test('Db should write an event1', async function (t) {
     let result = await db.mutate.write('eventSource', event1);
     t.same(result, Object.assign({}, event0, event1), 'should return current state matching events');
@@ -85,6 +92,13 @@ t.test('Db should return count of 2', async function (t) {
     t.end()
 })
 
+t.test('Db should return current state by aggregateId', async function (t) {
+    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let compare = Object.assign({}, event0, event1);
+    t.same(result, compare, 'return should match current state event1');
+    t.end()
+})
+
 t.test('Db should write an event2', async function (t) {
     let result = await db.mutate.write('eventSource', event2);
     t.same(result, Object.assign({}, event0, event1, event2), 'should return current state matching events');
@@ -94,6 +108,13 @@ t.test('Db should write an event2', async function (t) {
 t.test('Db should return count of 3', async function (t) {
     let result = await db.query.count();
     t.same(result, 3, 'should return 3');
+    t.end()
+})
+
+t.test('Db should return current state by aggregateId', async function (t) {
+    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let compare = Object.assign({}, event0, event1, event2);
+    t.same(result, compare, 'return should match current state event2');
     t.end()
 })
 
@@ -143,13 +164,6 @@ t.test('Db should read 3 events by aggregateId', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
     let compare = [event0, event1, event2];
     t.same(result, compare, 'should return 3 events');
-    t.end()
-})
-
-t.test('Db should return current state by aggregateId', async function (t) {
-    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
-    let compare = Object.assign({}, event0, event1, event2);
-    t.same(result, compare, 'should current state');
     t.end()
 })
 
