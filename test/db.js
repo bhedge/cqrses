@@ -35,7 +35,7 @@ const event1 = {
     }
 }
 
-const event3 = {
+const event2 = {
     id: '323456',
     aggregateId: '6543',
     aggregateRootId: '7890',
@@ -64,6 +64,36 @@ t.test('Db should write an event0', async function (t) {
     t.end()
 })
 
+t.test('Db should return count of 1', async function (t) {
+    let result = await db.query.count();
+    t.same(result, 1, 'should return 1');
+    t.end()
+})
+
+t.test('Db should write an event1', async function (t) {
+    let result = await db.mutate.write('eventSource', event1);
+    t.same(result, {status: 200}, 'should return status 200');
+    t.end()
+})
+
+t.test('Db should return count of 2', async function (t) {
+    let result = await db.query.count();
+    t.same(result, 2, 'should return 2');
+    t.end()
+})
+
+t.test('Db should write an event2', async function (t) {
+    let result = await db.mutate.write('eventSource', event2);
+    t.same(result, {status: 200}, 'should return status 200');
+    t.end()
+})
+
+t.test('Db should return count of 3', async function (t) {
+    let result = await db.query.count();
+    t.same(result, 3, 'should return 3');
+    t.end()
+})
+
 t.test('Db should read event0 by id', async function (t) {
     let result = await db.query.readById('eventSource', '023456');
     t.same(result, event0, 'should return event0');
@@ -71,22 +101,17 @@ t.test('Db should read event0 by id', async function (t) {
 })
 
 t.test('Db should read event0 by aggregateId and version', async function (t) {
-    let result = await db.query.readByAggregateId('eventSource', '6543', 0);
+    let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543', version:0}} );
     t.same(result, event0, 'should return event0');
     t.end()
 })
 
 t.test('Db should read event0 by aggregateRootId and version', async function (t) {
-    let result = await db.query.readByAggregateRootId('eventSource', '7890', 0);
+    let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:0}} );
     t.same(result, event0, 'should return event0');
     t.end()
 })
 
-t.test('Db should return count of 1', async function (t) {
-    let result = await db.query.count();
-    t.same(result, 1, 'should return 1');
-    t.end()
-})
 
 
 

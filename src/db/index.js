@@ -5,6 +5,7 @@ const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 const adapter = new FileSync('db.json')
 const db = low(adapter)
+const util = require('../util');
 
 /*
     This module handles the connection to the persisting store DAPI or direct DB connection
@@ -35,21 +36,47 @@ module.exports = function (config) {
             .value();
     }
 
-    this.query.readByAggregateId = async function readByAggregateId(collection, aggregateId, version) {
-        return db.get(collection)
-            .find({
-                aggregateId: aggregateId,
-                version: version
-            })
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string} args.searchDoc.aggregateId - The primary key for the search
+     * @param {string=} args.searchDoc.version - Optional version to get a specific version
+     * @returns {Object} event - the events returned from the search
+     */
+    this.query.readByAggregateId = async function readByAggregateId(args) {
+        let v = [];
+        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
+        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
+        v.push( util.data.check.present({field:'aggregateId', logic: ("aggregateId" in args.searchDoc), error:'E_DB_AGGREGATIONID_MISSING'}) );
+        
+        await Promise.all( v );
+
+        return db.get( args.collection )
+            .find( args.searchDoc )
             .value();
     }
 
-    this.query.readByAggregateRootId = async function readByAggregateRootId(collection, aggregateRootId, version) {
-        return db.get(collection)
-            .find({
-                aggregateRootId: aggregateRootId,
-                version: version
-            })
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string} args.searchDoc.aggregateRootId - The primary key for the search
+     * @param {string=} args.searchDoc.version - Optional version to get a specific version
+     * @returns {Object} event - the events returned from the search
+     */
+    this.query.readByAggregateRootId = async function readByAggregateRootId(args) {
+        let v = [];
+        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
+        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
+        v.push( util.data.check.present({field:'aggregateRootId', logic: ("aggregateRootId" in args.searchDoc), error:'E_DB_AGGREGATIONROOTID_MISSING'}) );
+        
+        await Promise.all( v );
+
+        return db.get( args.collection )
+            .find( args.searchDoc )
             .value();
     }
 
