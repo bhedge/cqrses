@@ -124,6 +124,18 @@ t.test('Db should read event0 by aggregateRootId and version', async function (t
     t.end()
 })
 
+t.test('Db should read event1 by aggregateRootId and version', async function (t) {
+    let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:1}} );
+    t.same(result, event1, 'should return event1');
+    t.end()
+})
+
+t.test('Db should read event2 by aggregateRootId and version', async function (t) {
+    let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:2}} );
+    t.same(result, event2, 'should return event2');
+    t.end()
+})
+
 
 
 
