@@ -144,6 +144,8 @@ t.test('util.sleep should sleep the specified amount of time of 1000 ms', async 
 
     const isDelayed = (elapsed + driftAllowance >= waitMilliSeconds);
 
+    if(!isDelayed) console.error('util.sleep elapsed:', elapsed, 'waitMilliSeconds:',waitMilliSeconds)
+
     t.equal(isDelayed, true, 'should be true to signify delay of at least amount' )
     t.end()
 })
