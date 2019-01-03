@@ -95,7 +95,7 @@ t.test('Db should return count of 3', async function (t) {
 })
 
 t.test('Db should read event0 by id', async function (t) {
-    let result = await db.query.readById('eventSource', '023456');
+    let result = await db.query.readById( {collection:'eventSource', searchDoc: {id:'023456'}} );
     t.same(result, event0, 'should return event0');
     t.end()
 })
@@ -139,7 +139,7 @@ t.test('Db should read event2 by aggregateRootId and version', async function (t
 t.test('Db should read 3 events by aggregateId', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
     let compare = [event0, event1, event2];
-    t.same(result, compare, 'should return event0');
+    t.same(result, compare, 'should return 3 events');
     t.end()
 })
 

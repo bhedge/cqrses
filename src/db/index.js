@@ -28,11 +28,24 @@ module.exports = function (config) {
     db.defaults(this.config.lowdb.defaultDB)
         .write();
 
-    this.query.readById = async function readById(collection, id) {
-        return db.get(collection)
-            .find({
-                id: id
-            })
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string} args.searchDoc.id - The primary key for the search
+     * @returns {Object} event - the event returned from the search
+     */
+    this.query.readById = async function readById(args) {
+        let v = [];
+        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
+        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
+        v.push( util.data.check.present({field:'id', logic: ("id" in args.searchDoc), error:'E_DB_ID_MISSING'}) );
+        
+        await Promise.all( v );
+
+        return db.get( args.collection )
+            .find( args.searchDoc )
             .value();
     }
 
