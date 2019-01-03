@@ -167,7 +167,7 @@ module.exports = function (config) {
         await db.update('count', n => n + 1)
         .write();
 
-        return Object.assign({}, currentState, eventToPersist);
+        return Object.freeze( Object.assign({}, currentState, eventToPersist) );
     }
 };
 
