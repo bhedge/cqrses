@@ -143,6 +143,13 @@ t.test('Db should read 3 events by aggregateId', async function (t) {
     t.end()
 })
 
+t.test('Db should return current state by aggregateId', async function (t) {
+    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let compare = Object.assign({}, event0, event1, event2);
+    t.same(result, compare, 'should current state');
+    t.end()
+})
+
 
 
 

@@ -7,6 +7,8 @@ const adapter = new FileSync('db.json')
 const db = low(adapter)
 const util = require('../util');
 
+const _ = require('lodash');
+
 /*
     This module handles the connection to the persisting store DAPI or direct DB connection
 */
@@ -38,15 +40,27 @@ module.exports = function (config) {
      */
     this.query.readById = async function readById(args) {
         let v = [];
-        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
-        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
-        v.push( util.data.check.present({field:'id', logic: ("id" in args.searchDoc), error:'E_DB_ID_MISSING'}) );
-        
-        await Promise.all( v );
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.searchDoc,
+            type: 'object',
+            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+        }));
+        v.push(util.data.check.present({
+            field: 'id',
+            logic: ("id" in args.searchDoc),
+            error: 'E_DB_ID_MISSING'
+        }));
 
-        return db.get( args.collection )
-            .find( args.searchDoc )
-            .value();
+        await Promise.all(v);
+
+        return Object.freeze(db.get(args.collection)
+            .find(args.searchDoc)
+            .value());
     }
 
     /**
@@ -60,15 +74,27 @@ module.exports = function (config) {
      */
     this.query.readByAggregateId = async function readByAggregateId(args) {
         let v = [];
-        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
-        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
-        v.push( util.data.check.present({field:'aggregateId', logic: ("aggregateId" in args.searchDoc), error:'E_DB_AGGREGATIONID_MISSING'}) );
-        
-        await Promise.all( v );
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.searchDoc,
+            type: 'object',
+            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+        }));
+        v.push(util.data.check.present({
+            field: 'aggregateId',
+            logic: ("aggregateId" in args.searchDoc),
+            error: 'E_DB_AGGREGATIONID_MISSING'
+        }));
 
-        return db.get( args.collection )
-            .filter( args.searchDoc )
-            .value();
+        await Promise.all(v);
+
+        return Object.freeze(db.get(args.collection)
+            .filter(args.searchDoc)
+            .value());
     }
 
     /**
@@ -82,15 +108,66 @@ module.exports = function (config) {
      */
     this.query.readByAggregateRootId = async function readByAggregateRootId(args) {
         let v = [];
-        v.push( util.data.check.typeof({field: args, type: 'object', error:'E_DB_ARGS_NOT_OBJECT'}) );
-        v.push( util.data.check.typeof({field: args.searchDoc, type: 'object', error:'E_DB_ARGSSEARCHDOC_NOT_OBJECT'}) );
-        v.push( util.data.check.present({field:'aggregateRootId', logic: ("aggregateRootId" in args.searchDoc), error:'E_DB_AGGREGATIONROOTID_MISSING'}) );
-        
-        await Promise.all( v );
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.searchDoc,
+            type: 'object',
+            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+        }));
+        v.push(util.data.check.present({
+            field: 'aggregateRootId',
+            logic: ("aggregateRootId" in args.searchDoc),
+            error: 'E_DB_AGGREGATIONROOTID_MISSING'
+        }));
 
-        return db.get( args.collection )
-            .filter( args.searchDoc )
+        await Promise.all(v);
+
+        return Object.freeze(
+            db.get(args.collection)
+            .filter(args.searchDoc)
+            .value()
+        );
+    }
+
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string=} args.searchDoc.aggregateRootId - The primary key for the search
+     * @param {string=} args.searchDoc.aggregateId - The primary key for the search
+     * @returns {Object} events - the events returned from the search
+     */
+    this.query.state = async function state(args) {
+        let v = [];
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.searchDoc,
+            type: 'object',
+            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+        }));
+        v.push(util.data.check.present({
+            field: 'aggregateRootId || aggregateId',
+            logic: ("aggregateRootId" in args.searchDoc || "aggregateId" in args.searchDoc),
+            error: 'E_DB_AGGREGATIONROOTID_AND_AGGREGATIONID_MISSING'
+        }));
+
+        await Promise.all(v);
+
+        const results = await db.get(args.collection)
+            .filter(args.searchDoc)
             .value();
+
+        const sortedResults = await sortByVersion(results);
+        return Object.freeze(Object.assign({}, ...sortedResults));
     }
 
     this.query.count = async function count() {
@@ -115,3 +192,6 @@ module.exports = function (config) {
     }
 };
 
+const sortByVersion = async function (a) {
+    return _.sortBy(a, 'version');;
+}
