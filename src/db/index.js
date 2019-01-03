@@ -142,33 +142,7 @@ module.exports = function (config) {
      * @param {string=} args.searchDoc.aggregateId - The primary key for the search
      * @returns {Object} events - the events returned from the search
      */
-    this.query.state = async function state(args) {
-        let v = [];
-        v.push(util.data.check.typeof({
-            field: args,
-            type: 'object',
-            error: 'E_DB_ARGS_NOT_OBJECT'
-        }));
-        v.push(util.data.check.typeof({
-            field: args.searchDoc,
-            type: 'object',
-            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
-        }));
-        v.push(util.data.check.present({
-            field: 'aggregateRootId || aggregateId',
-            logic: ("aggregateRootId" in args.searchDoc || "aggregateId" in args.searchDoc),
-            error: 'E_DB_AGGREGATIONROOTID_AND_AGGREGATIONID_MISSING'
-        }));
-
-        await Promise.all(v);
-
-        const results = await db.get(args.collection)
-            .filter(args.searchDoc)
-            .value();
-
-        const sortedResults = await sortByVersion(results);
-        return Object.freeze(Object.assign({}, ...sortedResults));
-    }
+    this.query.state = state;
 
     this.query.count = async function count() {
         return db.get('count')
@@ -176,22 +150,55 @@ module.exports = function (config) {
     }
 
     this.mutate.write = async function write(collection, event) {
-        let status = {
-            status: 200
-        };
+        const eventToPersist = Object.assign({}, event, {emitted: false});
 
-        // Increment count
-        await db.update('count', n => n + 1)
-            .write();
+        // fetch current state
+        const currentState = await state({collection: collection, searchDoc: { aggregateId: event.aggregateId } });
+        const currentVersion = currentState.version || -1;
 
+        //if( (currentVersion + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
+
+        // write to the DB
         await db.get(collection)
-            .push(event)
+            .push( eventToPersist )
             .write();
 
-        return status;
+        // increment count
+        await db.update('count', n => n + 1)
+        .write();
+
+        return Object.assign({}, currentState, eventToPersist);
     }
 };
 
 const sortByVersion = async function (a) {
     return _.sortBy(a, 'version');;
+}
+
+let state = async function (args) {
+    let v = [];
+    v.push(util.data.check.typeof({
+        field: args,
+        type: 'object',
+        error: 'E_DB_ARGS_NOT_OBJECT'
+    }));
+    v.push(util.data.check.typeof({
+        field: args.searchDoc,
+        type: 'object',
+        error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+    }));
+    v.push(util.data.check.present({
+        field: 'aggregateRootId || aggregateId',
+        logic: ("aggregateRootId" in args.searchDoc || "aggregateId" in args.searchDoc),
+        error: 'E_DB_AGGREGATIONROOTID_AND_AGGREGATIONID_MISSING'
+    }));
+
+    await Promise.all(v);
+
+    const results = await db.get(args.collection)
+        .filter(args.searchDoc)
+        .value();
+
+    const sortedResults = await sortByVersion(results);
+    return Object.freeze(Object.assign({}, ...sortedResults));
 }

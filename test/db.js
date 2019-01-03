@@ -22,7 +22,8 @@ const event0 = {
     version: 0,
     data: {
         key1: 'key1 data'
-    }
+    },
+    emitted: false
 }
 
 const event1 = {
@@ -32,7 +33,8 @@ const event1 = {
     version: 1,
     data: {
         key2: 'key2 data'
-    }
+    },
+    emitted: false
 }
 
 const event2 = {
@@ -42,7 +44,8 @@ const event2 = {
     version: 2,
     data: {
         key1: 'key1 data Updated'
-    }
+    },
+    emitted: false
 }
 
 const db = new Db( config );
@@ -60,7 +63,7 @@ t.test('Db should return 0 count initially', async function (t) {
 
 t.test('Db should write an event0', async function (t) {
     let result = await db.mutate.write('eventSource', event0);
-    t.same(result, {status: 200}, 'should return status 200');
+    t.same(result, event0, 'should return current state matching event');
     t.end()
 })
 
@@ -72,7 +75,7 @@ t.test('Db should return count of 1', async function (t) {
 
 t.test('Db should write an event1', async function (t) {
     let result = await db.mutate.write('eventSource', event1);
-    t.same(result, {status: 200}, 'should return status 200');
+    t.same(result, Object.assign({}, event0, event1), 'should return current state matching events');
     t.end()
 })
 
@@ -84,7 +87,7 @@ t.test('Db should return count of 2', async function (t) {
 
 t.test('Db should write an event2', async function (t) {
     let result = await db.mutate.write('eventSource', event2);
-    t.same(result, {status: 200}, 'should return status 200');
+    t.same(result, Object.assign({}, event0, event1, event2), 'should return current state matching events');
     t.end()
 })
 
