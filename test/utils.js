@@ -138,11 +138,11 @@ t.test('util.sleep should resolve to a sleep promise', async function (t) {
 t.test('util.sleep should sleep the specified amount of time of 1000 ms', async function (t) {
     const waitMilliSeconds = 1000;
     const start = process.hrtime();
+
     await util.sleep( waitMilliSeconds );
     const elapsed = process.hrtime(start)[1] / 1000;
-    const driftAllowance = 100;
 
-    const isDelayed = (elapsed + driftAllowance >= waitMilliSeconds);
+    const isDelayed = (elapsed >= waitMilliSeconds);
 
     if(!isDelayed) console.error('util.sleep elapsed:', elapsed, 'waitMilliSeconds:',waitMilliSeconds)
 
