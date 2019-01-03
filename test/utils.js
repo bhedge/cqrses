@@ -139,9 +139,10 @@ t.test('util.sleep should sleep the specified amount of time of 1000 ms', async 
     const waitMilliSeconds = 1000;
     const start = process.hrtime();
     await util.sleep( waitMilliSeconds );
-    var elapsed = process.hrtime(start)[1] / 1000;
+    const elapsed = process.hrtime(start)[1] / 1000;
+    const driftAllowance = 100;
 
-    const isDelayed = (elapsed >= waitMilliSeconds);
+    const isDelayed = (elapsed + driftAllowance >= waitMilliSeconds);
 
     t.equal(isDelayed, true, 'should be true to signify delay of at least amount' )
     t.end()
