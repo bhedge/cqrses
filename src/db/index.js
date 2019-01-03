@@ -54,7 +54,7 @@ module.exports = function (config) {
         await Promise.all( v );
 
         return db.get( args.collection )
-            .find( args.searchDoc )
+            .filter( args.searchDoc )
             .value();
     }
 
@@ -76,7 +76,7 @@ module.exports = function (config) {
         await Promise.all( v );
 
         return db.get( args.collection )
-            .find( args.searchDoc )
+            .filter( args.searchDoc )
             .value();
     }
 

@@ -102,37 +102,44 @@ t.test('Db should read event0 by id', async function (t) {
 
 t.test('Db should read event0 by aggregateId and version', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543', version:0}} );
-    t.same(result, event0, 'should return event0');
+    t.same(result, [event0], 'should return event0');
     t.end()
 })
 
 t.test('Db should read event1 by aggregateId and version', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543', version:1}} );
-    t.same(result, event1, 'should return event1');
+    t.same(result, [event1], 'should return event1');
     t.end()
 })
 
 t.test('Db should read event2 by aggregateId and version', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543', version:2}} );
-    t.same(result, event2, 'should return event2');
+    t.same(result, [event2], 'should return event2');
     t.end()
 })
 
 t.test('Db should read event0 by aggregateRootId and version', async function (t) {
     let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:0}} );
-    t.same(result, event0, 'should return event0');
+    t.same(result, [event0], 'should return event0');
     t.end()
 })
 
 t.test('Db should read event1 by aggregateRootId and version', async function (t) {
     let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:1}} );
-    t.same(result, event1, 'should return event1');
+    t.same(result, [event1], 'should return event1');
     t.end()
 })
 
 t.test('Db should read event2 by aggregateRootId and version', async function (t) {
     let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:2}} );
-    t.same(result, event2, 'should return event2');
+    t.same(result, [event2], 'should return event2');
+    t.end()
+})
+
+t.test('Db should read 3 events by aggregateId', async function (t) {
+    let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let compare = [event0, event1, event2];
+    t.same(result, compare, 'should return event0');
     t.end()
 })
 
