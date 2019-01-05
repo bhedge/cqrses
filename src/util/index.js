@@ -73,8 +73,23 @@ util.flakeId = async function (){
     return intformat(generator.next(), 'hex', { prefix: '0x' });
 }
 
+/**
+ * Sleep function to delay processing
+ * @param {number} ms - The delay in milliseconds for the sleep process
+ */
 util.sleep = function (ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Retry function with infinite backoff
+ * @param {number} retryCount - The number of times to retry
+ * @param {function} f - The function to be called
+ * @param {number} delay - The delay in milliseconds for the infinite backoff
+ */
+util.retry = (retryCount, f, delay) =>
+    f().catch(err => retryCount >= 1
+        ? util.sleep(delay).then(() => util.retry(retryCount -1, f, delay * 2))
+        : Promise.reject(err));
 
 module.exports = util;

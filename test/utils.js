@@ -135,19 +135,82 @@ t.test('util.sleep should resolve to a sleep promise', async function (t) {
     t.end()
 })
 
-t.test('util.sleep should sleep the specified amount of time of 1000 ms', async function (t) {
-    const waitMilliSeconds = 1000;
-    const start = process.hrtime();
+// t.test('util.sleep should sleep the specified amount of time of 1000 ms', async function (t) {
+//     const waitMilliSeconds = 1000;
+//     const start = process.hrtime();
 
-    await util.sleep( waitMilliSeconds );
-    const elapsed = process.hrtime(start)[1] / 1000;
-    const drift = 500; /* added because setTimeout is unreliable and returns faster than specified time */
+//     await util.sleep( waitMilliSeconds );
+//     const elapsed = process.hrtime(start)[1] / 1000;
+//     const drift = 900; /* added because setTimeout is unreliable and returns faster than specified time because node */
 
-    const isDelayed = (elapsed + drift >= waitMilliSeconds);
+//     const isDelayed = (elapsed + drift >= waitMilliSeconds);
 
-    if(!isDelayed) console.error('util.sleep elapsed:', elapsed, 'waitMilliSeconds:',waitMilliSeconds)
+//     if(!isDelayed) console.error('util.sleep elapsed:', elapsed, 'waitMilliSeconds:',waitMilliSeconds)
 
-    t.equal(isDelayed, true, 'should be true to signify delay of at least amount' )
+//     t.equal(isDelayed, true, 'should be true to signify delay of at least amount' )
+//     t.end()
+// })
+
+
+t.test('util.retry should resolve to a promise', async function (t) {
+    let f = async function () {
+        return
+    }
+
+    t.resolves( util.retry(1, f, 1) )
+    t.end()
+})
+
+t.test('util.retry should fail first and retry the promise call successfully', async function (t) {
+    let mock1 = 0;
+    
+    let f = async function () {
+        if (mock1%2 == 0) {
+            mock1 ++
+            return 'success'
+        } else {
+            mock1 ++
+            throw('ERROR THROWN ON ODD');
+        }   
+    }
+
+    let result = await util.retry(2, f, 2);
+
+    t.same( result, 'success', 'should equal success on retry');
+    t.end()
+})
+
+t.test('util.retry should fail thrice and retry the promise call successfully', async function (t) {
+    let mock2 = 0;
+    
+    let f = async function () {
+        mock2 ++
+
+        console.error('mock2 attempt:',mock2)
+        if(mock2===4) return 'success';
+
+        throw('ERROR THROWN');
+    }
+
+    let result = await util.retry(3, f, 500);
+
+    t.same( result, 'success', 'should equal success on retry');
+    t.end()
+})
+
+t.test('util.retry should fail thrice and then reject', async function (t) {
+    let mock3 = 0;
+    
+    let f = async function () {
+        mock3 ++
+
+        console.error('mock3 attempt:',mock3)
+        if(mock3===4) return 'success';
+
+        throw('ERROR THROWN');
+    }
+
+    t.rejects( util.retry(2, f, 500), 'should reject retry');
     t.end()
 })
 
