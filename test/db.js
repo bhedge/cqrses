@@ -19,7 +19,6 @@ const event0 = {
     id: '023456',
     aggregateId: '6543',
     aggregateRootId: '7890',
-    version: 0,
     data: {
         key1: 'key1 data'
     },
@@ -71,9 +70,10 @@ t.test('Db should return 0 count initially', async function (t) {
     t.end()
 })
 
-t.test('Db should write an event0', async function (t) {
+t.test('Db should write an event0 and default to version 0 if not provided', async function (t) {
     let result = await db.mutate.write('eventSource', event0);
-    t.same(result, event0, 'should return current state matching event');
+    let updated_event0 = Object.assign({}, event0, {version:0});
+    t.same(result, updated_event0, 'should return current state matching event');
     t.end()
 })
 
@@ -85,7 +85,7 @@ t.test('Db should return count of 1', async function (t) {
 
 t.test('Db should return current state by aggregateId', async function (t) {
     let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
-    let compare = Object.assign({}, event0);
+    let compare = Object.assign({}, event0, {version:0});
     t.same(result, compare, 'return should match current state event0');
     t.end()
 })
@@ -142,13 +142,15 @@ t.test('Db should return count of 4', async function (t) {
 
 t.test('Db should read event0 by id', async function (t) {
     let result = await db.query.readById( {collection:'eventSource', searchDoc: {id:'023456'}} );
-    t.same(result, event0, 'should return event0');
+    let updated_event0 = Object.assign({}, event0, {version:0})
+    t.same(result, updated_event0, 'should return event0');
     t.end()
 })
 
 t.test('Db should read event0 by aggregateId and version', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543', version:0}} );
-    t.same(result, [event0], 'should return event0');
+    let updated_event0 = Object.assign({}, event0, {version:0})
+    t.same(result, [updated_event0], 'should return event0');
     t.end()
 })
 
@@ -166,7 +168,8 @@ t.test('Db should read event2 by aggregateId and version', async function (t) {
 
 t.test('Db should read event0 by aggregateRootId and version', async function (t) {
     let result = await db.query.readByAggregateRootId( {collection:'eventSource', searchDoc: {aggregateRootId:'7890', version:0}} );
-    t.same(result, [event0], 'should return event0');
+    let updated_event0 = Object.assign({}, event0, {version:0})
+    t.same(result, [updated_event0], 'should return event0');
     t.end()
 })
 
@@ -184,8 +187,9 @@ t.test('Db should read event2 by aggregateRootId and version', async function (t
 
 t.test('Db should read 4 events by aggregateId', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let updated_event0 = Object.assign({}, event0, {version: 0});
     let updated_event3 = Object.assign({}, event3, {version: 3});
-    let compare = [event0, event1, event2, updated_event3];
+    let compare = [updated_event0, event1, event2, updated_event3];
     t.same(result, compare, 'should return 4 events');
     t.end()
 })
@@ -201,6 +205,22 @@ t.test('Db should throw error on write when the version is below the current sta
     let event3 = Object.assign({}, event2);
     event3.version = event3.version --;
     t.rejects( db.mutate.write('eventSource', event3) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.end()
+})
+
+t.test('Db should throw error on write the first event has version !== 0', async function (t) {
+    let bad_event0 = {
+        id: '923456',
+        aggregateId: '9543',
+        aggregateRootId: '9890',
+        data: {
+            key1: 'bad key1 data'
+        },
+        emitted: false,
+        version: 6
+    }
+
+    t.rejects( db.mutate.write('eventSource', bad_event0) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
     t.end()
 })
 
