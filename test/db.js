@@ -48,6 +48,16 @@ const event2 = {
     emitted: false
 }
 
+const event3 = {
+    id: '423456',
+    aggregateId: '6543',
+    aggregateRootId: '7890',
+    data: {
+        key1: 'Key 1 updated to event3'
+    },
+    emitted: false
+}
+
 const db = new Db( config );
 
 t.test('Db should have a default config when instantiated without a config', async function (t) {
@@ -118,6 +128,18 @@ t.test('Db should return current state by aggregateId', async function (t) {
     t.end()
 })
 
+t.test('Db should write an event3', async function (t) {
+    let result = await db.mutate.write('eventSource', event3);
+    t.same(result, Object.assign({}, event0, event1, event2, event3, {version: 3}), 'should return current state matching events');
+    t.end()
+})
+
+t.test('Db should return count of 4', async function (t) {
+    let result = await db.query.count();
+    t.same(result, 4, 'should return 4');
+    t.end()
+})
+
 t.test('Db should read event0 by id', async function (t) {
     let result = await db.query.readById( {collection:'eventSource', searchDoc: {id:'023456'}} );
     t.same(result, event0, 'should return event0');
@@ -160,10 +182,11 @@ t.test('Db should read event2 by aggregateRootId and version', async function (t
     t.end()
 })
 
-t.test('Db should read 3 events by aggregateId', async function (t) {
+t.test('Db should read 4 events by aggregateId', async function (t) {
     let result = await db.query.readByAggregateId( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
-    let compare = [event0, event1, event2];
-    t.same(result, compare, 'should return 3 events');
+    let updated_event3 = Object.assign({}, event3, {version: 3});
+    let compare = [event0, event1, event2, updated_event3];
+    t.same(result, compare, 'should return 4 events');
     t.end()
 })
 

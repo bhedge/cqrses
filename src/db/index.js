@@ -157,6 +157,9 @@ module.exports = function (config) {
         // fetch current state
         const currentState = await state({collection: collection, searchDoc: { aggregateId: event.aggregateId } });
         const currentVersion = Object.assign({}, {version: -1}, currentState);
+
+        if(!eventToPersist.version) eventToPersist.version = currentVersion.version + 1;
+
         if( (currentVersion.version + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
 
         // write to the DB
