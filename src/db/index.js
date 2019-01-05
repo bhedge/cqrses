@@ -152,6 +152,8 @@ module.exports = function (config) {
     this.mutate.write = async function write(collection, event) {
         const eventToPersist = Object.assign({}, event, {emitted: false});
 
+        //TODO: ALLOW PUBLISH WITH NO VERSION
+
         // fetch current state
         const currentState = await state({collection: collection, searchDoc: { aggregateId: event.aggregateId } });
         const currentVersion = Object.assign({}, {version: -1}, currentState);
@@ -165,6 +167,8 @@ module.exports = function (config) {
         // increment count
         await db.update('count', n => n + 1)
         .write();
+
+        //TODO: BROKER PUBLISH 
 
         return Object.freeze( Object.assign({}, currentState, eventToPersist) );
     }
