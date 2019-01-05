@@ -1,5 +1,5 @@
 "use strict";
-const debug = require('debug')('persist');
+const debug = require('debug')('db');
 
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
@@ -12,9 +12,9 @@ const _ = require('lodash');
 /*
     This module handles the connection to the persisting store DAPI or direct DB connection
 */
-debug('db loaded.');
+debug('loaded.');
 
-module.exports = function (config) {
+module.exports = function (config, broker) {
     let defaultConfig = {};
     defaultConfig.lowdb = {};
     defaultConfig.lowdb.defaultDB = {
@@ -26,6 +26,8 @@ module.exports = function (config) {
     this.dbType = 'lowdb'
     this.query = {};
     this.mutate = {};
+
+    debug('config set to ', config);
 
     db.defaults(this.config.lowdb.defaultDB)
         .write();
@@ -149,15 +151,15 @@ module.exports = function (config) {
             .value();
     }
 
-    this.mutate.write = async function write(collection, event) {
-        const eventToPersist = Object.assign({}, event, {emitted: false});
+    this.mutate.write = async function write(collection, event, pubBroker=broker) {
+        const eventToPersist = Object.assign({}, event);
 
         // fetch current state
         const currentState = await state({collection: collection, searchDoc: { aggregateId: event.aggregateId } });
-        const currentVersion = Object.assign({}, {version: -1}, currentState);
+        const currentStateVersion = Object.assign({}, {version: -1}, currentState);
 
-        if(!eventToPersist.version && currentVersion.version) eventToPersist.version = currentVersion.version + 1;
-        if( (currentVersion.version + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
+        if(!eventToPersist.version && currentStateVersion.version) eventToPersist.version = currentStateVersion.version + 1;
+        if( (currentStateVersion.version + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
 
         // write to the DB
         await db.get(collection)
@@ -168,9 +170,14 @@ module.exports = function (config) {
         await db.update('count', n => n + 1)
         .write();
 
-        //TODO: BROKER PUBLISH 
+        let brokerPublish = () => pubBroker.publish( eventToPersist );
 
-        return Object.freeze( Object.assign({}, currentState, eventToPersist) );
+        try{
+            let result = await util.retry(brokerPublish, 3, 500) ;
+            return Object.freeze( Object.assign({}, currentState, eventToPersist) );
+        } catch(err) {
+            throw err;
+        }
     }
 };
 

@@ -87,9 +87,19 @@ util.sleep = function (ms) {
  * @param {function} f - The function to be called
  * @param {number} delay - The delay in milliseconds for the infinite backoff
  */
-util.retry = (retryCount, f, delay) =>
-    f().catch(err => retryCount >= 1
-        ? util.sleep(delay).then(() => util.retry(retryCount -1, f, delay * 2))
+util.retry = (fn, retryCount=3, delay=500) =>
+    fn().catch(err => retryCount >= 1
+        ? util.sleep(delay).then(() => util.retry(fn, retryCount -1, delay * 2))
         : Promise.reject(err));
+
+// util.retry = async function (retryCount=3, fn, delay, err=null) {
+//     if (!retryCount) {
+//       return Promise.reject(err);
+//     }
+//     Promise.resolve(fn).catch(err => {
+//         return util.sleep(delay).then(() => util.retry(retryCount -1, fn, delay * 2, err));
+//     });
+// }
+
 
 module.exports = util;

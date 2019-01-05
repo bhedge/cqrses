@@ -157,7 +157,7 @@ t.test('util.retry should resolve to a promise', async function (t) {
         return
     }
 
-    t.resolves( util.retry(1, f, 1) )
+    t.resolves( util.retry(f, 1, 1) )
     t.end()
 })
 
@@ -174,7 +174,26 @@ t.test('util.retry should fail first and retry the promise call successfully', a
         }   
     }
 
-    let result = await util.retry(2, f, 2);
+    let result = await util.retry(f, 2, 2);
+
+    t.same( result, 'success', 'should equal success on retry');
+    t.end()
+})
+
+t.test('util.retry should pass with the defaults for retry and delay ', async function (t) {
+    let mock1 = 0;
+    
+    let f = async function () {
+        if (mock1%2 == 0) {
+            mock1 ++
+            return 'success'
+        } else {
+            mock1 ++
+            throw('ERROR THROWN ON ODD');
+        }   
+    }
+
+    let result = await util.retry(f);
 
     t.same( result, 'success', 'should equal success on retry');
     t.end()
@@ -185,14 +204,11 @@ t.test('util.retry should fail thrice and retry the promise call successfully', 
     
     let f = async function () {
         mock2 ++
-
-        console.error('mock2 attempt:',mock2)
         if(mock2===4) return 'success';
-
         throw('ERROR THROWN');
     }
 
-    let result = await util.retry(3, f, 500);
+    let result = await util.retry(f, 3, 500);
 
     t.same( result, 'success', 'should equal success on retry');
     t.end()
@@ -203,14 +219,11 @@ t.test('util.retry should fail thrice and then reject', async function (t) {
     
     let f = async function () {
         mock3 ++
-
-        console.error('mock3 attempt:',mock3)
         if(mock3===4) return 'success';
-
         throw('ERROR THROWN');
     }
 
-    t.rejects( util.retry(2, f, 500), 'should reject retry');
+    t.rejects( util.retry(f, 2, 500), 'should reject retry');
     t.end()
 })
 

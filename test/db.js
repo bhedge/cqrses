@@ -7,6 +7,11 @@ fs.unlinkSync('db.json', (err) => {
 });
 
 const Db = require('../src/db');
+const brokerMock = {};
+
+brokerMock.publish = async function() {
+    return {status: 200};
+}
 
 let config = {};
 config.lowdb = {};
@@ -21,8 +26,7 @@ const event0 = {
     aggregateRootId: '7890',
     data: {
         key1: 'key1 data'
-    },
-    emitted: false
+    }
 }
 
 const event1 = {
@@ -32,8 +36,7 @@ const event1 = {
     version: 1,
     data: {
         key2: 'key2 data'
-    },
-    emitted: false
+    }
 }
 
 const event2 = {
@@ -43,8 +46,7 @@ const event2 = {
     version: 2,
     data: {
         key1: 'key1 data Updated'
-    },
-    emitted: false
+    }
 }
 
 const event3 = {
@@ -53,11 +55,10 @@ const event3 = {
     aggregateRootId: '7890',
     data: {
         key1: 'Key 1 updated to event3'
-    },
-    emitted: false
+    }
 }
 
-const db = new Db( config );
+const db = new Db( config, brokerMock);
 
 t.test('Db should have a default config when instantiated without a config', async function (t) {
     t.type(new Db(), 'object', 'should return object');
@@ -216,11 +217,30 @@ t.test('Db should throw error on write the first event has version !== 0', async
         data: {
             key1: 'bad key1 data'
         },
-        emitted: false,
         version: 6
     }
 
     t.rejects( db.mutate.write('eventSource', bad_event0) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.end()
+})
+
+t.test('Db should throw an error if the broker fails to publish the event', async function (t) {
+    let emitEvent = {
+        id: '1',
+        aggregateId: '500',
+        aggregateRootId: '500',
+        data: {
+            key1: 'Created'
+        },
+        version: 0
+    }
+
+    let bad_broker = {}
+    bad_broker.publish = async function() {
+        throw('broker error.');
+    }
+
+    t.rejects(db.mutate.write('eventSource', emitEvent, bad_broker), 'should return error');
     t.end()
 })
 

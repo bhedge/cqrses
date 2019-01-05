@@ -11,13 +11,27 @@ module.exports = function (x) {
     }
   }
 
+let dbConfig = {};
+dbConfig.lowdb = {};
+dbConfig.lowdb.defaultDB = {
+      eventSource: [],
+      count: 0
+  };
+
 const aggregate = require('./aggregate');
-const broker = require('./broker');
+
+const Broker = require('./broker');
+const broker = new Broker();
+
 const command = require('./command');
 const Event = require('./event');
 const http = require('./http');
 const materialize = require('./materialize');
-const db = require('./db');
+
+const Db = require('./db');
+const db = new Db(dbConfig, broker);
+
+
 const query = require('./query');
 const resource = require('./resource');
 const util = require('./util');
