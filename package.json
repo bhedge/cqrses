@@ -37,11 +37,12 @@
   "devDependencies": {
     "cross-env": "^5.2.0",
     "debug": "^4.1.0",
+    "redis-mock": "^0.42.0",
+    "amqp-mock": "^0.1.4-1",
     "standard-version": "^4.4.0",
     "tap": "^12.1.1"
   },
   "dependencies": {
-    "amqp-mock": "^0.1.4-1",
     "biguint-format": "^1.0.0",
     "flake-idgen": "^1.1.0",
     "lodash": "^4.17.11",
