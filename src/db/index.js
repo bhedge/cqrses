@@ -207,28 +207,23 @@ module.exports = function (config, broker) {
         if( (currentStateVersion.version + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
 
         let dbWrites = [];
-
         dbWrites.push( 
             dbWriter.get('emit')
                 .push( {id: eventToPersist.id, mutatedDate: new Date().toISOString() } )
                 .write() 
         );
-
         dbWrites.push( 
             dbWriter.get( args.collection )
                 .push( eventToPersist )
                 .write() 
         );
-
         dbWrites.push( 
             dbWriter.update('count', n => n + 1)
                 .write() 
         );
-
         await Promise.all( dbWrites );
         
         const brokerPublish = () => pubBroker.publish( eventToPersist );
-
         try{
             let result = await util.retry(brokerPublish, 3, 500);
 
@@ -238,7 +233,12 @@ module.exports = function (config, broker) {
 
             return Object.freeze( Object.assign({}, currentState, eventToPersist) );
         } catch(err) {
-            throw err;
+            let output = {};
+            output.event = Object.freeze( Object.assign({}, currentState, eventToPersist) );
+            output.errors = [];
+            output.errors.push('broker failed to accept the event after 3 retries.');
+
+            return output; 
         }
     }
 };

@@ -1,3 +1,5 @@
+'use strict'
+
 var t = require('tap');
 const fs = require('fs');
 
@@ -241,30 +243,33 @@ t.test('Db should throw an error if the broker fails to publish the event', asyn
         throw('broker error.');
     }
 
-    t.rejects(db.mutate.write( {collection:'eventSource', event: emitEvent, pubBroker: bad_broker} ), 'should return error');
+    let result = await db.mutate.write( {collection:'eventSource', event: emitEvent, pubBroker: bad_broker} );
+
+    t.same(result.errors[0], 'broker failed to accept the event after 3 retries.' ,'should return error');
     t.end()
 })
 
-// t.test('Db should throw error on invalid db', async function (t) {
-//     let test_event = {
-//         id: '2',
-//         aggregateId: '3',
-//         aggregateRootId: '3',
-//         data: {
-//             key1: 'test key 1'
-//         }
-//     }
+t.test('Db worked with a passed in DB connection', async function (t) {
+    let test_event = {
+        id: '2',
+        aggregateId: '3',
+        aggregateRootId: '3',
+        data: {
+            key1: 'test key 1'
+        },
+        version: 0
+    }
 
-//     let bad_dbWriter = {}
-//     bad_dbWriter.get = async function() {
-//         throw('dbWriter error.');
-//     }
+    const low = require('lowdb');
+    const FileSync = require('lowdb/adapters/FileSync')
+    const adapter = new FileSync('db.json');
+    const new_db = low(adapter);
 
-//     let result = await db.mutate.write( {collection:'eventSource', event: test_event, dbWriter: bad_dbWriter} );
+    let result = await db.mutate.write( {collection:'eventSource', event: test_event, dbWriter: new_db} );
 
-//     t.same(result, 'dbWriter error.' , 'should return error')
-//     t.end()
-// })
+    t.same(result, test_event, 'should return the test_event')
+    t.end()
+})
 
 
 
