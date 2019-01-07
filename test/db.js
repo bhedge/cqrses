@@ -17,6 +17,7 @@ let config = {};
 config.lowdb = {};
 config.lowdb.defaultDB = {
     eventSource: [],
+    emit: [],
     count: 0
 };
 
@@ -72,7 +73,7 @@ t.test('Db should return 0 count initially', async function (t) {
 })
 
 t.test('Db should write an event0 and default to version 0 if not provided', async function (t) {
-    let result = await db.mutate.write('eventSource', event0);
+    let result = await db.mutate.write( {collection: 'eventSource', event: event0} );
     let updated_event0 = Object.assign({}, event0, {version:0});
     t.same(result, updated_event0, 'should return current state matching event');
     t.end()
@@ -85,14 +86,14 @@ t.test('Db should return count of 1', async function (t) {
 })
 
 t.test('Db should return current state by aggregateId', async function (t) {
-    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let result = await db.query.getState( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
     let compare = Object.assign({}, event0, {version:0});
     t.same(result, compare, 'return should match current state event0');
     t.end()
 })
 
 t.test('Db should write an event1', async function (t) {
-    let result = await db.mutate.write('eventSource', event1);
+    let result = await db.mutate.write( {collection: 'eventSource', event: event1} );
     t.same(result, Object.assign({}, event0, event1), 'should return current state matching events');
     t.end()
 })
@@ -104,14 +105,14 @@ t.test('Db should return count of 2', async function (t) {
 })
 
 t.test('Db should return current state by aggregateId', async function (t) {
-    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let result = await db.query.getState( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
     let compare = Object.assign({}, event0, event1);
     t.same(result, compare, 'return should match current state event1');
     t.end()
 })
 
 t.test('Db should write an event2', async function (t) {
-    let result = await db.mutate.write('eventSource', event2);
+    let result = await db.mutate.write( {collection: 'eventSource', event: event2} );
     t.same(result, Object.assign({}, event0, event1, event2), 'should return current state matching events');
     t.end()
 })
@@ -123,14 +124,14 @@ t.test('Db should return count of 3', async function (t) {
 })
 
 t.test('Db should return current state by aggregateId', async function (t) {
-    let result = await db.query.state( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
+    let result = await db.query.getState( {collection:'eventSource', searchDoc: {aggregateId:'6543'}} );
     let compare = Object.assign({}, event0, event1, event2);
     t.same(result, compare, 'return should match current state event2');
     t.end()
 })
 
 t.test('Db should write an event3', async function (t) {
-    let result = await db.mutate.write('eventSource', event3);
+    let result = await db.mutate.write( {collection: 'eventSource', event: event3} );
     t.same(result, Object.assign({}, event0, event1, event2, event3, {version: 3}), 'should return current state matching events');
     t.end()
 })
@@ -198,14 +199,14 @@ t.test('Db should read 4 events by aggregateId', async function (t) {
 t.test('Db should throw error on write when the version is above the current state by 2 or more', async function (t) {
     let event3 = Object.assign({}, event2);
     event3.version = event3.version ++;
-    t.rejects( db.mutate.write('eventSource', event3) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.rejects( db.mutate.write( {collection:'eventSource', event: event3} ) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
     t.end()
 })
 
 t.test('Db should throw error on write when the version is below the current state by 1 or more', async function (t) {
     let event3 = Object.assign({}, event2);
     event3.version = event3.version --;
-    t.rejects( db.mutate.write('eventSource', event3) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.rejects( db.mutate.write( {collection:'eventSource', event:event3} ) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
     t.end()
 })
 
@@ -220,7 +221,7 @@ t.test('Db should throw error on write the first event has version !== 0', async
         version: 6
     }
 
-    t.rejects( db.mutate.write('eventSource', bad_event0) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
+    t.rejects( db.mutate.write( {collection:'eventSource', event: bad_event0} ) , 'E_DB_WRITE_EVENT_VERSION_MISMATCH')
     t.end()
 })
 
@@ -240,9 +241,30 @@ t.test('Db should throw an error if the broker fails to publish the event', asyn
         throw('broker error.');
     }
 
-    t.rejects(db.mutate.write('eventSource', emitEvent, bad_broker), 'should return error');
+    t.rejects(db.mutate.write( {collection:'eventSource', event: emitEvent, pubBroker: bad_broker} ), 'should return error');
     t.end()
 })
+
+// t.test('Db should throw error on invalid db', async function (t) {
+//     let test_event = {
+//         id: '2',
+//         aggregateId: '3',
+//         aggregateRootId: '3',
+//         data: {
+//             key1: 'test key 1'
+//         }
+//     }
+
+//     let bad_dbWriter = {}
+//     bad_dbWriter.get = async function() {
+//         throw('dbWriter error.');
+//     }
+
+//     let result = await db.mutate.write( {collection:'eventSource', event: test_event, dbWriter: bad_dbWriter} );
+
+//     t.same(result, 'dbWriter error.' , 'should return error')
+//     t.end()
+// })
 
 
 

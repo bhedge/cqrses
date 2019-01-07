@@ -94,9 +94,11 @@ module.exports = function (config, broker) {
 
         await Promise.all(v);
 
-        return Object.freeze(db.get(args.collection)
-            .filter(args.searchDoc)
-            .value());
+        return Object.freeze(
+            db.get(args.collection)
+                .filter(args.searchDoc)
+                .value()
+        );
     }
 
     /**
@@ -144,36 +146,96 @@ module.exports = function (config, broker) {
      * @param {string=} args.searchDoc.aggregateId - The primary key for the search
      * @returns {Object} events - the events returned from the search
      */
-    this.query.state = state;
+    this.query.getState = getState;
 
     this.query.count = async function count() {
         return db.get('count')
             .value();
     }
 
-    this.mutate.write = async function write(collection, event, pubBroker=broker) {
-        const eventToPersist = Object.assign({}, event);
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.event - The event to be persisted
+     * @param {Object=} args.pubBroker - The broker to use to emit the persisted event
+     * @param {Object=} args.dbWriter - The db connection to persist the event to
+     * @returns {Object} events - the events returned from the search
+     */
+    this.mutate.write = async function write(args) {
+        let v = [];
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.event,
+            type: 'object',
+            error: 'E_DB_EVENT_NOT_OBJECT'
+        }));
+        if(args.pubBroker){
+            v.push(util.data.check.typeof({
+                field: args.pubBroker,
+                type: 'object',
+                error: 'E_DB_PUBBROKER_NOT_OBJECT'
+            }));
+        }
+        if(args.dbWriter){
+            v.push(util.data.check.typeof({
+                field: args.dbWriter,
+                type: 'object',
+                error: 'E_DB_DBWRITER_NOT_OBJECT'
+            }));
+        }
+        v.push(util.data.check.present({
+            field: 'collection',
+            logic: ("collection" in args),
+            error: 'E_DB_COLLECTION_MISSING'
+        }));
 
-        // fetch current state
-        const currentState = await state({collection: collection, searchDoc: { aggregateId: event.aggregateId } });
+        await Promise.all(v);
+
+        const pubBroker = args.pubBroker || broker;
+        const dbWriter = args.dbWriter || db;
+
+        const eventToPersist = Object.assign({}, args.event);
+        const currentState = await getState({collection: args.collection, searchDoc: { aggregateId: args.event.aggregateId } });
         const currentStateVersion = Object.assign({}, {version: -1}, currentState);
 
         if(!eventToPersist.version && currentStateVersion.version) eventToPersist.version = currentStateVersion.version + 1;
         if( (currentStateVersion.version + 1) != (eventToPersist.version ) ) return Promise.reject( new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH') );
 
-        // write to the DB
-        await db.get(collection)
-            .push( eventToPersist )
-            .write();
+        let dbWrites = [];
 
-        // increment count
-        await db.update('count', n => n + 1)
-        .write();
+        dbWrites.push( 
+            dbWriter.get('emit')
+                .push( {id: eventToPersist.id, mutatedDate: new Date().toISOString() } )
+                .write() 
+        );
 
-        let brokerPublish = () => pubBroker.publish( eventToPersist );
+        dbWrites.push( 
+            dbWriter.get( args.collection )
+                .push( eventToPersist )
+                .write() 
+        );
+
+        dbWrites.push( 
+            dbWriter.update('count', n => n + 1)
+                .write() 
+        );
+
+        await Promise.all( dbWrites );
+        
+        const brokerPublish = () => pubBroker.publish( eventToPersist );
 
         try{
-            let result = await util.retry(brokerPublish, 3, 500) ;
+            let result = await util.retry(brokerPublish, 3, 500);
+
+            dbWriter.get('emit')
+            .remove( {id: eventToPersist.id} )
+            .write();
+
             return Object.freeze( Object.assign({}, currentState, eventToPersist) );
         } catch(err) {
             throw err;
@@ -185,7 +247,7 @@ const sortByVersion = async function (a) {
     return _.sortBy(a, 'version');;
 }
 
-let state = async function (args) {
+let getState = async function (args) {
     let v = [];
     v.push(util.data.check.typeof({
         field: args,

@@ -15,6 +15,7 @@ let dbConfig = {};
 dbConfig.lowdb = {};
 dbConfig.lowdb.defaultDB = {
       eventSource: [],
+      emit: [],
       count: 0
   };
 
