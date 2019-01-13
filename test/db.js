@@ -282,7 +282,7 @@ for(let x in dbTypes){
     })
 }
 
-t.test('Db return the same object when required again ', async function (t) {
+t.test('Db should return message when invalid db type specified ', async function (t) {
     let db1 = require('../src/db')('nope', {}, {});
     t.same(db1, 'The provided db type is not known. Must be one of the following:lowdb');
     t.end()
