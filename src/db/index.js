@@ -3,8 +3,6 @@
     This module handles the connection to the persisting store DAPI or direct DB connection
 */
 
-// https://softwarebrothers.co/blog/adapter-pattern-in-node-js/
-
 const debug = require('debug')('db');
 const lowdb = require('./lowdb.js');
 

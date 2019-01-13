@@ -72,6 +72,12 @@ for(let x in dbTypes){
         }
     }
 
+    t.test('Db return the same object when required again ', async function (t) {
+        let db2 = require('../src/db')(dbTypes[x], config, brokerMock);
+        t.same(db2, db, 'should return same object');
+        t.end()
+    })
+
     t.test('Db should return 0 count initially', async function (t) {
         let result = await db.query.count();
         t.same(result, 0, 'should return 0');
