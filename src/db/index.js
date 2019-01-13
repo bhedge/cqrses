@@ -14,7 +14,7 @@ module.exports = function (dbType, config, broker) {
         case 'lowdb':
             if(!global.__cqrses_lowdb) global.__cqrses_lowdb = new lowdb(config, broker)
             return global.__cqrses_lowdb;
-        // default:            
-        //     return Promise.reject (`The provided db type is not known. Must be one of the following:${dbTypes.toString()}`);
+        default:            
+            return `The provided db type is not known. Must be one of the following:${dbTypes.toString()}`
     }
 }
