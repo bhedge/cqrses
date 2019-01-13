@@ -29,9 +29,10 @@ const Event = require('./event');
 const http = require('./http');
 const materialize = require('./materialize');
 
-const Db = require('./db');
-const db = new Db(dbConfig, broker);
+//let nopeDB = require('../src/db')('nope', {}, {});
 
+const db = require('./db')('lowdb', dbConfig, broker);
+//const db2 = require('./db')('lowdb', dbConfig, broker);
 
 const query = require('./query');
 const resource = require('./resource');
