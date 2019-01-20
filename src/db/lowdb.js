@@ -32,25 +32,6 @@ module.exports = function (config, broker) {
      * @returns {Object} event - the event returned from the search
      */
     this.query.readById = async function readById(args) {
-        let v = [];
-        v.push(util.data.check.typeof({
-            field: args,
-            type: 'object',
-            error: 'E_DB_ARGS_NOT_OBJECT'
-        }));
-        v.push(util.data.check.typeof({
-            field: args.searchDoc,
-            type: 'object',
-            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
-        }));
-        v.push(util.data.check.present({
-            field: 'id',
-            logic: ("id" in args.searchDoc),
-            error: 'E_DB_ID_MISSING'
-        }));
-
-        await Promise.all(v);
-
         return Object.freeze(db.get(args.collection)
             .find(args.searchDoc)
             .value());

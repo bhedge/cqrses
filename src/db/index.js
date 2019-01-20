@@ -31,7 +31,7 @@ const dbInterface = function (database, connectionId, broker) {
     const db = database;
 
     /* query section */
-    this.query.readById = db.query.readById;
+    this.query.readById = dbReadById;
     this.query.readByAggregateId = db.query.readByAggregateId; 
     this.query.readByAggregateRootId = db.query.readByAggregateRootId;
     this.query.getState = db.query.getState;
@@ -41,6 +41,19 @@ const dbInterface = function (database, connectionId, broker) {
     this.mutate.write = dbWrite;
     this.mutate.removeEmit = db.mutate.removeEmit;
 
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string} args.searchDoc.id - The primary key for the search
+     * @returns {Object} event - the event returned from the search
+     */
+    async function dbReadById(args){
+        await preFlightDbReadById(args)
+        const result = await db.query.readById(args);
+        return result;
+    }
 
     /**
      * Assign the args for the function
@@ -122,6 +135,27 @@ module.exports = function (dbType, config, broker, connectionId=0) {
     }
 }
 
+async function preFlightDbReadById(args){
+    let v = [];
+    v.push(util.data.check.typeof({
+        field: args,
+        type: 'object',
+        error: 'E_DB_ARGS_NOT_OBJECT'
+    }));
+    v.push(util.data.check.typeof({
+        field: args.searchDoc,
+        type: 'object',
+        error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+    }));
+    v.push(util.data.check.present({
+        field: 'id',
+        logic: ("id" in args.searchDoc),
+        error: 'E_DB_ID_MISSING'
+    }));
+
+    await Promise.all(v);
+    return;
+}
 
 async function preFlightDbWrite(args) {
     let v = [];
