@@ -37,7 +37,7 @@ const dbInterface = function (database, connectionId, broker) {
     this.query.readByAggregateId = dbReadByAggregateId; 
     this.query.readByAggregateRootId = dbReadByAggregateRootId;
     this.query.getState = dbGetState;
-    this.query.count = db.query.count;
+    this.query.count = dbCount;
 
     /* mutate section */
     this.mutate.write = dbWrite;
@@ -108,6 +108,11 @@ const dbInterface = function (database, connectionId, broker) {
         const results = await dbReadByAggregateId(args);
         const sortedResults = await sortByVersion(results);
         return Object.freeze(Object.assign({}, ...sortedResults));
+    }
+
+    async function dbCount (){
+        const result = await db.query.count();
+        return result
     }
     
     /**

@@ -10,7 +10,7 @@ const util = require('../util');
 
 debug('lowdb loaded.');
 
-module.exports = function (config, broker) {
+module.exports = function (config) {
     this.config = config;
     this.dbType = 'lowdb'
     this.query = {};
