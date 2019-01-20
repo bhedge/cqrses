@@ -31,7 +31,7 @@ const materialize = require('./materialize');
 
 //let nopeDB = require('../src/db')('nope', {}, {});
 
-const db = require('./db')('lowdb', dbConfig, broker);
+const db0 = require('./db')('lowdb', dbConfig, broker);
 //const db2 = require('./db')('lowdb', dbConfig, broker);
 
 const query = require('./query');
