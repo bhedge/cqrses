@@ -44,7 +44,7 @@ module.exports = function (dbType, config, broker, connectionId=0) {
         case 'lowdb':
             if(!global.__cqrses_lowdb) global.__cqrses_lowdb = {dbType:'lowdb'};
             if(!global.__cqrses_lowdb[ connectionId ]) global.__cqrses_lowdb[ connectionId ] = new lowdb(config, broker)
-            return new dbInterface( global.__cqrses_lowdb, connectionId, broker )
+            return Object.freeze( new dbInterface( global.__cqrses_lowdb, connectionId, broker ) );
         default:            
             return `The provided db type is not known. Must be one of the following:${dbTypes.toString()}`
     }
