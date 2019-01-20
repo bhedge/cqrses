@@ -13,21 +13,6 @@ const _ = require('lodash');
 debug('lowdb loaded.');
 
 module.exports = function (config, broker) {
-    let v = [];
-        v.push(util.data.check.typeof({
-            field: config,
-            type: 'object',
-            error: 'E_DB_CONFIG_NOT_OBJECT'
-        }));
-
-        v.push(util.data.check.typeof({
-            field: broker,
-            type: 'object',
-            error: 'E_DB_BROKER_NOT_OBJECT'
-        }));
-
-    Promise.all( v );
-
     this.config = config;
     this.dbType = 'lowdb'
     this.query = {};
@@ -164,7 +149,6 @@ module.exports = function (config, broker) {
      * @param {Object} args - The arguments for the function
      * @param {string} args.collection - The name of the collection to query i.e. eventSource
      * @param {Object} args.event - The event to be persisted
-     * @param {Object=} args.pubBroker - The broker to use to emit the persisted event
      * @param {Object=} args.dbWriter - The db connection to persist the event to
      * @returns {Object} events - the events returned from the search
      */

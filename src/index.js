@@ -48,7 +48,8 @@ const event0 = {
   }
 }
 
-writeEvent0();
+/* testing noise */
+//writeEvent0();
 
 async function writeEvent0() {
   let result = await db0.mutate.write( {collection: 'eventSource', event: event0} );

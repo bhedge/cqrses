@@ -41,6 +41,16 @@ const dbInterface = function (database, connectionId, broker) {
     this.mutate.write = dbWrite;
     this.mutate.removeEmit = db.mutate.removeEmit;
 
+
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.event - The event to be persisted
+     * @param {Object=} args.pubBroker - The broker to use to emit the persisted event
+     * @param {Object=} args.dbWriter - The db connection to persist the event to
+     * @returns {Object} events - the events returned from the search
+     */
     async function dbWrite(args){
         let v = [];
         v.push(util.data.check.typeof({
@@ -109,13 +119,27 @@ const dbInterface = function (database, connectionId, broker) {
             return output;
         }
     }
-
 };
 
 debug('loading the db through the adapter...');
 module.exports = function (dbType, config, broker, connectionId=0) {
     switch (dbType) {
         case 'lowdb':
+            let v = [];
+            v.push(util.data.check.typeof({
+                field: config,
+                type: 'object',
+                error: 'E_DB_CONFIG_NOT_OBJECT'
+            }));
+
+            v.push(util.data.check.typeof({
+                field: broker,
+                type: 'object',
+                error: 'E_DB_BROKER_NOT_OBJECT'
+            }));
+
+            Promise.all( v );
+
             if(!global.__cqrses_lowdb) global.__cqrses_lowdb = {dbType:'lowdb'};
             
             if(!global.__cqrses_lowdb[ connectionId ]) {
