@@ -52,38 +52,7 @@ const dbInterface = function (database, connectionId, broker) {
      * @returns {Object} events - the events returned from the search
      */
     async function dbWrite(args){
-        let v = [];
-        v.push(util.data.check.typeof({
-            field: args,
-            type: 'object',
-            error: 'E_DB_ARGS_NOT_OBJECT'
-        }));
-        v.push(util.data.check.typeof({
-            field: args.event,
-            type: 'object',
-            error: 'E_DB_EVENT_NOT_OBJECT'
-        }));
-        if (args.pubBroker) {
-            v.push(util.data.check.typeof({
-                field: args.pubBroker,
-                type: 'object',
-                error: 'E_DB_PUBBROKER_NOT_OBJECT'
-            }));
-        }
-        if (args.dbWriter) {
-            v.push(util.data.check.typeof({
-                field: args.dbWriter,
-                type: 'object',
-                error: 'E_DB_DBWRITER_NOT_OBJECT'
-            }));
-        }
-        v.push(util.data.check.present({
-            field: 'collection',
-            logic: ("collection" in args),
-            error: 'E_DB_COLLECTION_MISSING'
-        }));
-    
-        await Promise.all(v);
+        await preFlightDbWrite(args);
     
         const pubBroker = args.pubBroker || broker;
         const eventToPersist = Object.assign({}, args.event);
@@ -151,4 +120,41 @@ module.exports = function (dbType, config, broker, connectionId=0) {
         default:            
             return `The provided db type is not known. Must be one of the following:${dbTypes.toString()}`
     }
+}
+
+
+async function preFlightDbWrite(args) {
+    let v = [];
+    v.push(util.data.check.typeof({
+        field: args,
+        type: 'object',
+        error: 'E_DB_ARGS_NOT_OBJECT'
+    }));
+    v.push(util.data.check.typeof({
+        field: args.event,
+        type: 'object',
+        error: 'E_DB_EVENT_NOT_OBJECT'
+    }));
+    if (args.pubBroker) {
+        v.push(util.data.check.typeof({
+            field: args.pubBroker,
+            type: 'object',
+            error: 'E_DB_PUBBROKER_NOT_OBJECT'
+        }));
+    }
+    if (args.dbWriter) {
+        v.push(util.data.check.typeof({
+            field: args.dbWriter,
+            type: 'object',
+            error: 'E_DB_DBWRITER_NOT_OBJECT'
+        }));
+    }
+    v.push(util.data.check.present({
+        field: 'collection',
+        logic: ("collection" in args),
+        error: 'E_DB_COLLECTION_MISSING'
+    }));
+
+    await Promise.all(v);
+    return;
 }

@@ -153,6 +153,39 @@ module.exports = function (config, broker) {
      * @returns {Object} events - the events returned from the search
      */
     this.mutate.write = async function write(args) {
+        let v = [];
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.event,
+            type: 'object',
+            error: 'E_DB_EVENT_NOT_OBJECT'
+        }));
+        if (args.pubBroker) {
+            v.push(util.data.check.typeof({
+                field: args.pubBroker,
+                type: 'object',
+                error: 'E_DB_PUBBROKER_NOT_OBJECT'
+            }));
+        }
+        if (args.dbWriter) {
+            v.push(util.data.check.typeof({
+                field: args.dbWriter,
+                type: 'object',
+                error: 'E_DB_DBWRITER_NOT_OBJECT'
+            }));
+        }
+        v.push(util.data.check.present({
+            field: 'collection',
+            logic: ("collection" in args),
+            error: 'E_DB_COLLECTION_MISSING'
+        }));
+    
+        await Promise.all(v);
+        
         const dbWriter = args.dbWriter || db;
         const eventToPersist = Object.assign({}, args.event);
   
