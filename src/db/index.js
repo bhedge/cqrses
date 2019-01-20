@@ -41,8 +41,7 @@ const dbInterface = function (database, connectionId, broker) {
 
     /* mutate section */
     this.mutate.write = dbWrite;
-    this.mutate.removeEmit = db.mutate.removeEmit;
-
+    this.mutate.removeEmit = dbRemoveEmit;
 
     /* function section */
 
@@ -114,6 +113,11 @@ const dbInterface = function (database, connectionId, broker) {
         const result = await db.query.count();
         return result
     }
+
+    async function dbRemoveEmit(args){
+        const result = await db.mutate.removeEmit(args);
+        return result
+    }
     
     /**
      * Assign the args for the function
@@ -150,7 +154,7 @@ const dbInterface = function (database, connectionId, broker) {
         const brokerPublish = () => pubBroker.publish(eventToPersist);
         try {
             let result = await util.retry(brokerPublish, 3, 500); 
-            await db.mutate.removeEmit(args);    
+            await dbRemoveEmit(args);    
             return Object.freeze(Object.assign({}, currentState, eventToPersist));
         } catch (err) {
             let output = {};
