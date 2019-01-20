@@ -33,7 +33,7 @@ const dbInterface = function (database, connectionId, broker) {
     /* query section */
     this.query.readById = dbReadById;
     this.query.readByAggregateId = dbReadByAggregateId; 
-    this.query.readByAggregateRootId = db.query.readByAggregateRootId;
+    this.query.readByAggregateRootId = dbReadByAggregateRootId;
     this.query.getState = db.query.getState;
     this.query.count = db.query.count;
 
@@ -68,6 +68,21 @@ const dbInterface = function (database, connectionId, broker) {
         await preFlightDbReadByAggregateId(args);
         const result = await db.query.readByAggregateId(args);
         return result;
+    }
+
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string} args.searchDoc.aggregateRootId - The primary key for the search
+     * @param {string=} args.searchDoc.version - Optional version to get a specific version
+     * @returns {Object} event - the events returned from the search
+     */
+    async function dbReadByAggregateRootId(args){
+        await preFlightDbReadByAggregateRootId(args)
+        const result = await db.query.readByAggregateRootId(args)
+        return result
     }
 
     /**
@@ -188,6 +203,28 @@ async function preFlightDbReadByAggregateId(args){
         field: 'aggregateId',
         logic: ("aggregateId" in args.searchDoc),
         error: 'E_DB_AGGREGATIONID_MISSING'
+    }));
+
+    await Promise.all(v);
+    return;
+}
+
+async function preFlightDbReadByAggregateRootId(args){
+    let v = [];
+    v.push(util.data.check.typeof({
+        field: args,
+        type: 'object',
+        error: 'E_DB_ARGS_NOT_OBJECT'
+    }));
+    v.push(util.data.check.typeof({
+        field: args.searchDoc,
+        type: 'object',
+        error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+    }));
+    v.push(util.data.check.present({
+        field: 'aggregateRootId',
+        logic: ("aggregateRootId" in args.searchDoc),
+        error: 'E_DB_AGGREGATIONROOTID_MISSING'
     }));
 
     await Promise.all(v);
