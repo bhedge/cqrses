@@ -8,8 +8,6 @@ const adapter = new FileSync('db.json')
 const db = low(adapter)
 const util = require('../util');
 
-const _ = require('lodash');
-
 debug('lowdb loaded.');
 
 module.exports = function (config, broker) {
@@ -71,17 +69,6 @@ module.exports = function (config, broker) {
         );
     }
 
-    /**
-     * Assign the args for the function
-     * @param {Object} args - The arguments for the function
-     * @param {string} args.collection - The name of the collection to query i.e. eventSource
-     * @param {Object} args.searchDoc - The search object for the fields to search by and values
-     * @param {string=} args.searchDoc.aggregateRootId - The primary key for the search
-     * @param {string=} args.searchDoc.aggregateId - The primary key for the search
-     * @returns {Object} events - the events returned from the search
-     */
-    this.query.getState = getState;
-
     this.query.count = async function count() {
         return db.get('count')
             .value();
@@ -131,37 +118,4 @@ module.exports = function (config, broker) {
         return;
     }
 };
-
-const sortByVersion = async function (a) {
-    return _.sortBy(a, 'version');;
-}
-
-let getState = async function (args) {
-    let v = [];
-    v.push(util.data.check.typeof({
-        field: args,
-        type: 'object',
-        error: 'E_DB_ARGS_NOT_OBJECT'
-    }));
-    v.push(util.data.check.typeof({
-        field: args.searchDoc,
-        type: 'object',
-        error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
-    }));
-    v.push(util.data.check.present({
-        field: 'aggregateRootId || aggregateId',
-        logic: ("aggregateRootId" in args.searchDoc || "aggregateId" in args.searchDoc),
-        error: 'E_DB_AGGREGATIONROOTID_AND_AGGREGATIONID_MISSING'
-    }));
-
-    await Promise.all(v);
-
-    const results = await db.get(args.collection)
-        .filter(args.searchDoc)
-        .value();
-
-    const sortedResults = await sortByVersion(results);
-    return Object.freeze(Object.assign({}, ...sortedResults));
-}
-
 

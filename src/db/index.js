@@ -9,6 +9,8 @@ const util = require('../util');
 const dbTypes = ['lowdb'];
 const lowdb = require('./lowdb.js');
 
+const _ = require('lodash');
+
 /**
  * defines the required database interface
  * @param {Object} database - The database object for the constructor
@@ -34,12 +36,15 @@ const dbInterface = function (database, connectionId, broker) {
     this.query.readById = dbReadById;
     this.query.readByAggregateId = dbReadByAggregateId; 
     this.query.readByAggregateRootId = dbReadByAggregateRootId;
-    this.query.getState = db.query.getState;
+    this.query.getState = dbGetState;
     this.query.count = db.query.count;
 
     /* mutate section */
     this.mutate.write = dbWrite;
     this.mutate.removeEmit = db.mutate.removeEmit;
+
+
+    /* function section */
 
     /**
      * Assign the args for the function
@@ -85,6 +90,26 @@ const dbInterface = function (database, connectionId, broker) {
         return result
     }
 
+    const sortByVersion = async function (a) {
+        return _.sortBy(a, 'version');;
+    }
+
+    /**
+     * Assign the args for the function
+     * @param {Object} args - The arguments for the function
+     * @param {string} args.collection - The name of the collection to query i.e. eventSource
+     * @param {Object} args.searchDoc - The search object for the fields to search by and values
+     * @param {string=} args.searchDoc.aggregateRootId - The primary key for the search
+     * @param {string=} args.searchDoc.aggregateId - The primary key for the search
+     * @returns {Object} events - the events returned from the search
+     */
+    async function dbGetState (args) {
+        await preFlightDbGetState(args);
+        const results = await dbReadByAggregateId(args);
+        const sortedResults = await sortByVersion(results);
+        return Object.freeze(Object.assign({}, ...sortedResults));
+    }
+    
     /**
      * Assign the args for the function
      * @param {Object} args - The arguments for the function
@@ -100,7 +125,7 @@ const dbInterface = function (database, connectionId, broker) {
         const pubBroker = args.pubBroker || broker;
         const eventToPersist = Object.assign({}, args.event);
 
-        const currentState = await db.query.getState({
+        const currentState = await dbGetState({
             collection: args.collection,
             searchDoc: {
                 aggregateId: args.event.aggregateId
@@ -181,6 +206,28 @@ async function preFlightDbReadById(args){
         field: 'id',
         logic: ("id" in args.searchDoc),
         error: 'E_DB_ID_MISSING'
+    }));
+
+    await Promise.all(v);
+    return;
+}
+
+async function preFlightDbGetState(args) {
+    let v = [];
+    v.push(util.data.check.typeof({
+        field: args,
+        type: 'object',
+        error: 'E_DB_ARGS_NOT_OBJECT'
+    }));
+    v.push(util.data.check.typeof({
+        field: args.searchDoc,
+        type: 'object',
+        error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
+    }));
+    v.push(util.data.check.present({
+        field: 'aggregateRootId || aggregateId',
+        logic: ("aggregateRootId" in args.searchDoc || "aggregateId" in args.searchDoc),
+        error: 'E_DB_AGGREGATIONROOTID_AND_AGGREGATIONID_MISSING'
     }));
 
     await Promise.all(v);
