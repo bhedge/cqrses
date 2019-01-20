@@ -28,7 +28,7 @@ for(let x in dbTypes){
                 console.log('successfully deleted db.json to have a clean test');
             });
 
-            db = require('../src/db')(dbTypes[x], config, brokerMock);
+            db = require('../src/db')(dbTypes[x], config, brokerMock, 0);
             break;
         default:
             throw('db is unknown.');
@@ -73,8 +73,8 @@ for(let x in dbTypes){
     }
 
     t.test('Db return the same object when required again ', async function (t) {
-        let db2 = require('../src/db')(dbTypes[x], config, brokerMock);
-        t.same(db2, db, 'should return same object');
+        let db2 = require('../src/db')(dbTypes[x], config, brokerMock, 0);
+        t.equal(db2, db, 'should return same object');
         t.end()
     })
 

@@ -39,3 +39,23 @@ const resource = require('./resource');
 const util = require('./util');
 
 
+const event0 = {
+  id: '023456',
+  aggregateId: '6543',
+  aggregateRootId: '7890',
+  data: {
+      key1: 'key1 data'
+  }
+}
+
+writeEvent0();
+
+async function writeEvent0() {
+  let result = await db0.mutate.write( {collection: 'eventSource', event: event0} );
+  let updated_event0 = Object.assign({}, event0, {version:0});
+
+  console.log(result);
+  return result;
+}
+
+

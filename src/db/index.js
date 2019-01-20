@@ -4,6 +4,7 @@
 */
 
 const debug = require('debug')('db');
+const util = require('../util');
 
 const dbTypes = ['lowdb'];
 const lowdb = require('./lowdb.js');
@@ -27,15 +28,88 @@ const dbInterface = function (database, connectionId, broker) {
     this.dbType = database.dbType;
     this.connectionId = connectionId;
 
+    const db = database;
+
     /* query section */
-    this.query.readById = database[ connectionId ].query.readById;
-    this.query.readByAggregateId = database[ connectionId ].query.readByAggregateId; 
-    this.query.readByAggregateRootId = database[ connectionId ].query.readByAggregateRootId;
-    this.query.getState = database[ connectionId ].query.getState;
-    this.query.count = database[ connectionId ].query.count;
+    this.query.readById = db.query.readById;
+    this.query.readByAggregateId = db.query.readByAggregateId; 
+    this.query.readByAggregateRootId = db.query.readByAggregateRootId;
+    this.query.getState = db.query.getState;
+    this.query.count = db.query.count;
 
     /* mutate section */
-    this.mutate.write = database[ connectionId ].mutate.write;
+    this.mutate.write = dbWrite;
+    this.mutate.removeEmit = db.mutate.removeEmit;
+
+    async function dbWrite(args){
+        let v = [];
+        v.push(util.data.check.typeof({
+            field: args,
+            type: 'object',
+            error: 'E_DB_ARGS_NOT_OBJECT'
+        }));
+        v.push(util.data.check.typeof({
+            field: args.event,
+            type: 'object',
+            error: 'E_DB_EVENT_NOT_OBJECT'
+        }));
+        if (args.pubBroker) {
+            v.push(util.data.check.typeof({
+                field: args.pubBroker,
+                type: 'object',
+                error: 'E_DB_PUBBROKER_NOT_OBJECT'
+            }));
+        }
+        if (args.dbWriter) {
+            v.push(util.data.check.typeof({
+                field: args.dbWriter,
+                type: 'object',
+                error: 'E_DB_DBWRITER_NOT_OBJECT'
+            }));
+        }
+        v.push(util.data.check.present({
+            field: 'collection',
+            logic: ("collection" in args),
+            error: 'E_DB_COLLECTION_MISSING'
+        }));
+    
+        await Promise.all(v);
+    
+        const pubBroker = args.pubBroker || broker;
+        const eventToPersist = Object.assign({}, args.event);
+
+        const currentState = await db.query.getState({
+            collection: args.collection,
+            searchDoc: {
+                aggregateId: args.event.aggregateId
+            }
+        });
+
+        const currentStateVersion = Object.assign({}, {
+            version: -1
+        }, currentState);
+    
+        if (!eventToPersist.version && currentStateVersion.version) eventToPersist.version = currentStateVersion.version + 1;
+        if ((currentStateVersion.version + 1) != (eventToPersist.version)) return Promise.reject(new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH'));
+    
+        const updatedArgs = Object.assign({}, args, {event: eventToPersist});
+        await db.mutate.write(updatedArgs);
+        
+        const brokerPublish = () => pubBroker.publish(eventToPersist);
+        try {
+            let result = await util.retry(brokerPublish, 3, 500); 
+            await db.mutate.removeEmit(args);    
+            return Object.freeze(Object.assign({}, currentState, eventToPersist));
+        } catch (err) {
+            let output = {};
+            output.event = Object.freeze(Object.assign({}, currentState, eventToPersist));
+            output.errors = [];
+            output.errors.push('broker failed to accept the event after 3 retries.');
+    
+            return output;
+        }
+    }
+
 };
 
 debug('loading the db through the adapter...');
@@ -43,8 +117,13 @@ module.exports = function (dbType, config, broker, connectionId=0) {
     switch (dbType) {
         case 'lowdb':
             if(!global.__cqrses_lowdb) global.__cqrses_lowdb = {dbType:'lowdb'};
-            if(!global.__cqrses_lowdb[ connectionId ]) global.__cqrses_lowdb[ connectionId ] = new lowdb(config, broker)
-            return Object.freeze( new dbInterface( global.__cqrses_lowdb, connectionId, broker ) );
+            
+            if(!global.__cqrses_lowdb[ connectionId ]) {
+                const newLowdb = new lowdb(config, broker);
+                global.__cqrses_lowdb[ connectionId ] = Object.freeze( new dbInterface( newLowdb, connectionId, broker ) );  
+            }
+
+            return global.__cqrses_lowdb[ connectionId ];
         default:            
             return `The provided db type is not known. Must be one of the following:${dbTypes.toString()}`
     }

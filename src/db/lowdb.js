@@ -169,56 +169,9 @@ module.exports = function (config, broker) {
      * @returns {Object} events - the events returned from the search
      */
     this.mutate.write = async function write(args) {
-        let v = [];
-        v.push(util.data.check.typeof({
-            field: args,
-            type: 'object',
-            error: 'E_DB_ARGS_NOT_OBJECT'
-        }));
-        v.push(util.data.check.typeof({
-            field: args.event,
-            type: 'object',
-            error: 'E_DB_EVENT_NOT_OBJECT'
-        }));
-        if (args.pubBroker) {
-            v.push(util.data.check.typeof({
-                field: args.pubBroker,
-                type: 'object',
-                error: 'E_DB_PUBBROKER_NOT_OBJECT'
-            }));
-        }
-        if (args.dbWriter) {
-            v.push(util.data.check.typeof({
-                field: args.dbWriter,
-                type: 'object',
-                error: 'E_DB_DBWRITER_NOT_OBJECT'
-            }));
-        }
-        v.push(util.data.check.present({
-            field: 'collection',
-            logic: ("collection" in args),
-            error: 'E_DB_COLLECTION_MISSING'
-        }));
-
-        await Promise.all(v);
-
-        const pubBroker = args.pubBroker || broker;
         const dbWriter = args.dbWriter || db;
-
         const eventToPersist = Object.assign({}, args.event);
-        const currentState = await getState({
-            collection: args.collection,
-            searchDoc: {
-                aggregateId: args.event.aggregateId
-            }
-        });
-        const currentStateVersion = Object.assign({}, {
-            version: -1
-        }, currentState);
-
-        if (!eventToPersist.version && currentStateVersion.version) eventToPersist.version = currentStateVersion.version + 1;
-        if ((currentStateVersion.version + 1) != (eventToPersist.version)) return Promise.reject(new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH'));
-
+  
         let dbWrites = [];
         dbWrites.push(
             dbWriter.get('emit')
@@ -238,26 +191,17 @@ module.exports = function (config, broker) {
             .write()
         );
         await Promise.all(dbWrites);
+        return;
+    }
 
-        const brokerPublish = () => pubBroker.publish(eventToPersist);
-        try {
-            let result = await util.retry(brokerPublish, 3, 500);
-
-            dbWriter.get('emit')
+    this.mutate.removeEmit = async function removeEmit(args) {
+        const dbWriter = args.dbWriter || db;
+        dbWriter.get('emit')
                 .remove({
-                    id: eventToPersist.id
+                    id: args.event.id
                 })
                 .write();
-
-            return Object.freeze(Object.assign({}, currentState, eventToPersist));
-        } catch (err) {
-            let output = {};
-            output.event = Object.freeze(Object.assign({}, currentState, eventToPersist));
-            output.errors = [];
-            output.errors.push('broker failed to accept the event after 3 retries.');
-
-            return output;
-        }
+        return;
     }
 };
 
