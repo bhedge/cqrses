@@ -47,25 +47,6 @@ module.exports = function (config, broker) {
      * @returns {Object} event - the events returned from the search
      */
     this.query.readByAggregateId = async function readByAggregateId(args) {
-        let v = [];
-        v.push(util.data.check.typeof({
-            field: args,
-            type: 'object',
-            error: 'E_DB_ARGS_NOT_OBJECT'
-        }));
-        v.push(util.data.check.typeof({
-            field: args.searchDoc,
-            type: 'object',
-            error: 'E_DB_ARGSSEARCHDOC_NOT_OBJECT'
-        }));
-        v.push(util.data.check.present({
-            field: 'aggregateId',
-            logic: ("aggregateId" in args.searchDoc),
-            error: 'E_DB_AGGREGATIONID_MISSING'
-        }));
-
-        await Promise.all(v);
-
         return Object.freeze(
             db.get(args.collection)
             .filter(args.searchDoc)
