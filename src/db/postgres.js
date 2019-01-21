@@ -17,8 +17,8 @@ module.exports = {
 
       // monkey patch the query method to keep track of the last query executed
       client.query = () => {
-        client.lastQuery = arguments
-        client.query.apply(client, arguments)
+        // client.lastQuery = arguments
+        // client.query.apply(client, arguments)
       }
 
       // set a timeout of 5 seconds, after which we will log this client's last query
@@ -37,7 +37,7 @@ module.exports = {
         // set the query method back to its old un-monkey-patched version
         client.query = query
       }
-
+      console.log(release)
       callback(err, client, done)
     })
   }
