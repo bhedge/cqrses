@@ -149,6 +149,8 @@ const dbInterface = function (database, connectionId, broker) {
         if ((currentStateVersion.version + 1) != (eventToPersist.version)) return Promise.reject(new Error('E_DB_WRITE_EVENT_VERSION_MISMATCH'));
     
         const updatedArgs = Object.assign({}, args, {event: eventToPersist});
+
+        /* write the entry to the database */
         await db.mutate.write(updatedArgs);
         
         const brokerPublish = () => pubBroker.publish(eventToPersist);
