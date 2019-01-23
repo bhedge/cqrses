@@ -44,6 +44,7 @@
     "tap": "^12.1.1"
   },
   "dependencies": {
+    "amqplib": "^0.5.3",
     "biguint-format": "^1.0.0",
     "flake-idgen": "^1.1.0",
     "lodash": "^4.17.11",
