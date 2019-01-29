@@ -35,7 +35,6 @@
   },
   "homepage": "https://github.com/bhedge/cqrses#readme",
   "devDependencies": {
-    "amqp-mock": "^0.1.4-1",
     "cross-env": "^5.2.0",
     "debug": "^4.1.0",
     "redis-mock": "^0.42.0",
