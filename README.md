@@ -24,7 +24,7 @@ password: guest
 more information is located at: https://hub.docker.com/_/rabbitmq/
 
 ```
-docker run -d --hostname rabbitmq01 --name rabbitmq01 -p 8080:15672 rabbitmq:3-management
+docker run -d --hostname rabbitmq01 --name rabbitmq01 -p 8080:15672 -p 5672:5672 rabbitmq:3-management
 ```
 
 ## Running the tests
