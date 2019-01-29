@@ -7,7 +7,7 @@ const util = require('../util')
 */
 debug('broker loaded.')
 
-// const amqpmock = require('amqp-mock')
+// const amqp = require('amqplib')
 
 module.exports = function (config) {
   let defaultConfig = {}

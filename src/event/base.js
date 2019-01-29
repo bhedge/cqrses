@@ -13,9 +13,11 @@ module.exports.event = {
   aggregateId: '', /* the entity id of the item being changed */
   eventTopic: '', /* the top level topic that the event is for */
   eventType: '', /* the detailed event name that has been emitted */
+  batchId: '', /* used to tie multiple requests together in a batch */
   correlationId: '', /* the id for the request and added to all logs etc. and persisted with the event */
   observedDate: '', /* the date that the event will be observed if loaded for past events - default to created date if null */
   createdDate: '', /* the date that the event was created */
   createdById: '', /* the userId based on the auth system that made this change */
-  data: {} /* the data that pertains to the state change for this specific event */
+  data: {}, /* the data that pertains to the state change for this specific event */
+  meta: {} /* the meta structure to be used by the developers to store data related to the request */
 }
