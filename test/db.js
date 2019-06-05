@@ -23,10 +23,12 @@ for (let x in dbTypes) {
         count: 0
       }
 
-      fs.unlinkSync('db.json', (err) => {
-        if (err) throw err
+      try {
+        fs.unlinkSync('db.json')
         console.log('successfully deleted db.json to have a clean test')
-      })
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err
+      }
 
       db = require('../src/db')(dbTypes[x], config, brokerMock, 0)
       break
